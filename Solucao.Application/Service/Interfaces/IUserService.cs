@@ -12,7 +12,7 @@ namespace Solucao.Application.Service.Interfaces
 {
     public interface IUserService
     {
-        Task<IEnumerable<UserViewModel>> GetAll();
+        Task<IEnumerable<UserViewModel>> GetAll(bool isDriver);
 
         Task<UserViewModel> GetById(Guid Id);
 

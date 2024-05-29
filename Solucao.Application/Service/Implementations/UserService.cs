@@ -30,9 +30,9 @@ namespace Solucao.Application.Service.Implementations
             history = _history;
         }
 
-        public async Task<IEnumerable<UserViewModel>> GetAll()
+        public async Task<IEnumerable<UserViewModel>> GetAll(bool isDriver)
         {
-            return mapper.Map<IEnumerable<UserViewModel>>(await userRepository.GetAll());
+            return mapper.Map<IEnumerable<UserViewModel>>(await userRepository.GetAll(isDriver));
         }
 
         public Task<UserViewModel> GetById(Guid Id)

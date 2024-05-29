@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using NetDevPack.Data;
 using Microsoft.Extensions.Logging;
 using Solucao.Application.Utils.Enum;
+using System.Linq;
 
 namespace Solucao.Application.Data.Repositories
 {
@@ -24,8 +25,10 @@ namespace Solucao.Application.Data.Repositories
             logger = _logger;
         }
 
-        public virtual async Task<IEnumerable<User>> GetAll()
+        public virtual async Task<IEnumerable<User>> GetAll(bool isDriver)
         {
+            if (isDriver)
+                return await Db.Users.Where(x => x.Role == "driver").ToListAsync();
             return await Db.Users.ToListAsync();
         }
 

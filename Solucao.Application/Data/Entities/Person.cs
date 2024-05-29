@@ -12,6 +12,8 @@ namespace Solucao.Application.Data.Entities
         public string Plate { get; set; }
         public string CellPhone { get; set; }
         public string PersonType { get; set; }
+        public Guid? UserId { get; set; }
+        public User User { get; set; }
 
     }
 }

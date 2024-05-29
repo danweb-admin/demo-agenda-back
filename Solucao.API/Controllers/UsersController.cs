@@ -41,10 +41,10 @@ namespace Solucao.API.Controllers
         [SwaggerResponse((int)HttpStatusCode.BadRequest, Type = typeof(ApplicationError))]
         [SwaggerResponse((int)HttpStatusCode.Conflict, Type = typeof(ApplicationError))]
         [SwaggerResponse((int)HttpStatusCode.NotFound, Type = typeof(ApplicationError))]
-        public async Task<IEnumerable<UserViewModel>> GetAllAsync()
+        public async Task<IEnumerable<UserViewModel>> GetAllAsync(bool isDriver)
         {
             logger.LogInformation($"{nameof(GetAllAsync)} | Inicio da chamada");
-            return await userService.GetAll();
+            return await userService.GetAll(isDriver);
         }
 
         [HttpPost("user")]
