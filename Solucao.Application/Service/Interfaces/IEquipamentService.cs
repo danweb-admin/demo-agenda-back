@@ -12,6 +12,9 @@ namespace Solucao.Application.Service.Interfaces
     {
         Task<IEnumerable<EquipamentViewModel>> GetAll(bool ativo);
 
+        Task<IEnumerable<EquipamentViewModel>> GetAllDistinct(bool ativo);
+
+
         Task<ValidationResult> Add(EquipamentViewModel equipament);
 
         Task<ValidationResult> Update(EquipamentViewModel equipament);

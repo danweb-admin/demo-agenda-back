@@ -1,4 +1,5 @@
 ﻿using Solucao.Application.Contracts;
+using Solucao.Application.Contracts.Response;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -14,10 +15,18 @@ namespace Solucao.Application.Service.Interfaces
 
         Task<decimal> GetValueByEquipament(Guid clientId, Guid equipamentId, string startTime, string endTime);
 
-        Task<ClientViewModel> GetById(Guid Id);
+        Task<ClientViewModel> GetById(Guid? Id);
 
         Task<ValidationResult> Add(ClientViewModel client);
 
         Task<ValidationResult> Update(ClientViewModel client);
+
+        Task AdjustEquipmentValues();
+
+        Task MigrateClientValues();
+
+        Task<IEnumerable<ClientEquipmentNamesViewModel>> ClientEquipment(string clientName);
+
+        Task<ValidationResult> ClientEquipmentSave(ClientEquipmentNamesViewModel viewModel);
     }
 }

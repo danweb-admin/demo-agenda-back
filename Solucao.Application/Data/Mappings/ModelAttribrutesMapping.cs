@@ -30,14 +30,13 @@ namespace Solucao.Application.Data.Mappings
                 .HasMaxLength(50)
                 .IsRequired();
 
-            builder.Property(c => c.ModelId)
-                .HasColumnName("modelId")
-                .IsRequired();
-
             builder.Property(c => c.Active)
                 .HasColumnType("bit")
                 .HasColumnName("active")
                 .IsRequired();
+
+            builder.Property(c => c.Order);
+
         }
     }
 }

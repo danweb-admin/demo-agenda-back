@@ -22,9 +22,9 @@ namespace Solucao.Application.Data.Repositories
             DbSet = Db.Set<ModelAttributes>();
         }
 
-        public async Task<IEnumerable<ModelAttributes>> GetAll(Guid modelId)
+        public async Task<IEnumerable<ModelAttributes>> GetAll()
         {
-            return await Db.ModelAttributes.Where(x => x.ModelId == modelId).ToListAsync();
+            return await Db.ModelAttributes.ToListAsync();
         }
 
         public async Task<ValidationResult> Add(ModelAttributes model)
@@ -57,20 +57,7 @@ namespace Solucao.Application.Data.Repositories
 
         }
 
-        public async Task<ValidationResult> RemoveByModelId(Guid modelId)
-        {
-            try
-            {
-                var model = Db.ModelAttributes.Where(x => x.ModelId == modelId);
-                DbSet.RemoveRange(model);
-                await Db.SaveChangesAsync();
-                return ValidationResult.Success;
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-        }
+        
 
         public async Task<ValidationResult> Remove(Guid id)
         {

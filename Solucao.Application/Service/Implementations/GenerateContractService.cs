@@ -1,44 +1,46 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AutoMapper;
 using DocumentFormat.OpenXml.Packaging;
 using Humanizer;
-using Microsoft.AspNetCore.Http;
 using Solucao.Application.Contracts;
 using Solucao.Application.Contracts.Requests;
 using Solucao.Application.Data.Entities;
+using Solucao.Application.Data.Interfaces;
 using Solucao.Application.Data.Repositories;
 using Solucao.Application.Exceptions.Calendar;
 using Solucao.Application.Exceptions.Model;
 using Solucao.Application.Service.Interfaces;
-using Spire.Doc;
+using Solucao.Application.Utils;
 using Calendar = Solucao.Application.Data.Entities.Calendar;
 
 
 namespace Solucao.Application.Service.Implementations
 {
-	public class GenerateContractService : IGenerateContractService
-	{
+    public class GenerateContractService : IGenerateContractService
+    {
         private readonly IMapper mapper;
         private readonly CalendarRepository calendarRepository;
         private readonly ModelRepository modelRepository;
+        private readonly ModelAttributesRepository modelAttributesRepository;
+        private readonly IClientRepository clientRepository;
         private CultureInfo cultureInfo = new CultureInfo("pt-BR");
 
 
-        public GenerateContractService(IMapper _mapper, CalendarRepository _calendarRepository, ModelRepository _modelRepository)
-		{
+        public GenerateContractService(IMapper _mapper, CalendarRepository _calendarRepository, ModelRepository _modelRepository, IClientRepository _clientRepository, ModelAttributesRepository _modelAttributesRepository)
+        {
             mapper = _mapper;
             calendarRepository = _calendarRepository;
             modelRepository = _modelRepository;
-		}
+            clientRepository = _clientRepository;
+            modelAttributesRepository = _modelAttributesRepository;
+        }
 
         public async Task<IEnumerable<CalendarViewModel>> GetAllByDayAndContractMade(DateTime date)
         {
@@ -64,26 +66,21 @@ namespace Solucao.Application.Service.Implementations
 
             var calendar = mapper.Map<CalendarViewModel>(await calendarRepository.GetById(request.CalendarId));
             calendar.RentalTime = CalculateMinutes(calendar.StartTime.Value, calendar.EndTime.Value);
-            SearchCustomerValue(calendar);
-
+            await SearchCustomerValue(calendar);
+            calendar.TotalValue = calendar.Value + calendar.Freight - calendar.Discount + calendar.Additional1;
 
             var model = await modelRepository.GetByEquipament(calendar.EquipamentId);
 
             if (model == null)
                 throw new ModelNotFoundException("Modelo de contrato para esse equipamento não encontrado.");
 
+            var attributes = await modelAttributesRepository.GetAll();
+
             var contractFileName = FormatNameFile(calendar.Client.Name, calendar.Equipament.Name, calendar.Date);
 
-            var copiedFile = await CopyFileStream(modelPath, contractPath,model.ModelFileName, contractFileName, calendar.Date);
+            var copiedFile = await CopyFileStream(modelPath, contractPath, model.ModelFileName, contractFileName, calendar.Date);
 
-            string docxFilePath = copiedFile;
-            string pdfFilePath = contractPath + "teste.pdf";
-
-            ConvertDocxToPdf(docxFilePath, pdfFilePath);
-
-            Console.WriteLine("Conversão concluída!");
-
-            var result = ExecuteReplace(copiedFile, model, calendar);
+            var result = ExecuteReplace(copiedFile, attributes, calendar);
 
             if (result)
             {
@@ -99,11 +96,9 @@ namespace Solucao.Application.Service.Implementations
             return new ValidationResult("Erro para gerar o contrato");
         }
 
-        
-
         private string FormatNameFile(string locatarioName, string equipamentName, DateTime date)
         {
-            var _locatarioName = locatarioName.Replace(" ","");
+            var _locatarioName = locatarioName.Replace(" ", "");
             var _equipamentName = equipamentName.Replace(" ", "");
             var _date = date.ToString("dd-MM-yyyy");
 
@@ -133,7 +128,7 @@ namespace Solucao.Application.Service.Implementations
             }
         }
 
-        private bool ExecuteReplace(string copiedFile, Model model, CalendarViewModel calendar)
+        private bool ExecuteReplace(string copiedFile, IEnumerable<ModelAttributes> attributes, CalendarViewModel calendar)
         {
             try
             {
@@ -143,7 +138,7 @@ namespace Solucao.Application.Service.Implementations
                     using (StreamReader sr = new StreamReader(wordDoc.MainDocumentPart.GetStream()))
                         docText = sr.ReadToEnd();
 
-                    foreach (var item in model.ModelAttributes)
+                    foreach (var item in attributes)
                     {
                         Regex regexText = new Regex(item.FileAttribute.Trim());
                         var valueItem = GetPropertieValue(calendar, item.TechnicalAttribute, item.AttributeType);
@@ -161,7 +156,7 @@ namespace Solucao.Application.Service.Implementations
                 Console.WriteLine(ex.StackTrace);
                 return false;
             }
-            
+
         }
 
         private string GetPropertieValue(object obj, string propertieName, string attrType)
@@ -201,92 +196,106 @@ namespace Solucao.Application.Service.Implementations
                 case "datetime":
                     return DateTime.Parse(value).ToString("dd/MM/yyyy");
                 case "datetime_extenso":
-                    return DateTime.Parse(value).ToString("D", cultureInfo);
+                    var monthDay = DateTime.Parse(value).ToString("M", cultureInfo);
+                    var year = DateTime.Parse(value).ToString("yyyy", cultureInfo);
+
+                    return $"{monthDay} de {year}";
                 case "time":
                     return DateTime.Parse(value).ToString("HH:mm");
                 case "decimal":
-                    return decimal.Parse(value).ToString().Replace(".", ",");
+                    return decimal.Parse(value).ToString("N2", cultureInfo);
                 case "decimal_extenso":
-                    var decimalSplit = Decimal.Parse(value).ToString("n2").Split('.');
-                    var part1 = long.Parse(decimalSplit[0].Replace(",","")).ToWords(cultureInfo);
-                    var part2 = int.Parse(decimalSplit[1]).ToWords(cultureInfo);
-
-                    if (part2 == "zero")
-                        return $"{part1} reais";
-                    return $"{part1} reais e {part2} centavos";
+                    return decimalExtenso(value);
+                case "time_extenso":
+                    return timeExtenso(value);
                 default:
                     return value;
             }
         }
 
-        private void SearchCustomerValue(CalendarViewModel calendar)
+        private string decimalExtenso(string value)
+        {
+            var decimalSplit = decimal.Parse(value).ToString("n2").Split('.');
+            var part1 = long.Parse(decimalSplit[0].Replace(",", "")).ToWords(cultureInfo).ToTitleCase(TitleCase.First);
+            var part2 = int.Parse(decimalSplit[1]).ToWords(cultureInfo);
+
+            if (part2 == "zero")
+                return $"{part1} reais";
+            return $"{part1} reais e {part2} centavos";
+        }
+
+        private string timeExtenso(string value)
+        {
+            var minutesTotal = int.Parse(value);
+
+            int hours = minutesTotal / 60;
+            int minutes = minutesTotal % 60;
+
+            string result = "";
+
+            if (hours == 0)
+            {
+                if (minutes > 0)
+                    result += $"{minutes} {(minutes == 1 ? "minuto" : "minutos")}";
+                return result;
+            }
+
+            result = $"{hours} {(hours == 1 ? "hora" : "horas")}";
+
+            if (minutes > 0)
+                result += $" e {minutes} {(minutes == 1 ? "minuto" : "minutos")}";
+
+            return result;
+        }
+
+        private async Task SearchCustomerValue(CalendarViewModel calendar)
         {
             TimeSpan difference = calendar.EndTime.Value - calendar.StartTime.Value;
             var rentalTime = difference.TotalHours;
 
-            var split = calendar.Client.EquipamentValues.Split("->");
+            var rentalTimeString = Utils.Helpers.FormatTime((decimal)rentalTime);
 
-            foreach (var line in split)
+            var result = await clientRepository.GetEquipmentValueByClient(calendar.ClientId, calendar.EquipamentId, rentalTimeString);
+
+            if (result != 0)
             {
-                if (string.IsNullOrEmpty(line))
-                    continue;
 
-                var strings = line.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-                var equipamento = strings[0].Trim();
-
-                if (calendar.Equipament.Name.ToUpper().Contains(equipamento))
-                {
-
-                    for (int i = 0; i < strings.Length; i++)
-                    {
-                        if (i == 0)
-                            continue;
-
-                        var hoursValues = strings[i].Replace("-", "–").Split("–");
-
-                        var hours = hoursValues[0].Trim();
-                        var value = decimal.Parse(hoursValues[1].Trim().Replace(".", "").Replace(",", "."));
-
-                        var hr = int.Parse(Regex.Replace(hours.Trim(), @"[^\d]", ""));
-
-                        if (rentalTime <= hr)
-                        {
-                            if (hoursValues.Length > 2)
-                                calendar.Value = ValuesBySpecification(calendar, hoursValues);
-                            else
-                                calendar.Value = calendar.ValueWithoutSpec = value;
-                            return;
-                        }
-                    }
-                }
+                var specs = await clientRepository.GetSpecsByClient(calendar.ClientId);
+                if (specs.Count() > 0)
+                    calendar.Value = ValuesBySpecification(calendar, specs, result);
+                else
+                    calendar.Value = calendar.ValueWithoutSpec = result;
+                return;
             }
 
             throw new CalendarNoValueException("Não foi encontrado o valor para a Locação no cadastro do cliente");
 
         }
 
-        private decimal ValuesBySpecification(CalendarViewModel calendar, string[] hoursValues)
+        private decimal ValuesBySpecification(CalendarViewModel calendar, IEnumerable<ClientSpecification> specifications, decimal valueWithoutSpec)
         {
-            decimal retorno = decimal.Parse(hoursValues[1].Trim().Replace(".", "").Replace(",", "."));
-            var specification = calendar.CalendarSpecifications.Where(x => x.Active);
+            TimeSpan difference = calendar.EndTime.Value - calendar.StartTime.Value;
+            var rentalTime = difference.TotalHours;
 
-            calendar.ValueWithoutSpec = retorno;
+            calendar.ValueWithoutSpec = valueWithoutSpec;
+            var specs = calendar.CalendarSpecifications.Where(x => x.Active);
 
-            for (int i = 2; i < hoursValues.Length; i++)
+            foreach (var spec in specs)
             {
-                var ponteiraValor = hoursValues[i];
-                var temp = ponteiraValor.Split("+");
-                var ponteira = temp[0].ToString().Trim();
-                var valor = decimal.Parse(temp[1].Replace(",", ""));
-                if (specification.Any(x => x.Specification.Name.ToUpper().Contains(temp[0].Trim())))
+                foreach (var item in specifications)
                 {
-                    retorno += valor;
-                    calendar.Additional1 = valor;
-
+                    if (item.SpecificationId == spec.SpecificationId)
+                    {
+                        if (rentalTime <= item.Hours || item.Hours == 0)
+                        {
+                            calendar.Additional1 = item.Value;
+                            return valueWithoutSpec;
+                        }
+                    }
                 }
             }
 
-            return retorno;
+            return valueWithoutSpec;
         }
 
         private int CalculateMinutes(DateTime startTime, DateTime endTime)
@@ -296,16 +305,6 @@ namespace Solucao.Application.Service.Implementations
 
             TimeSpan difference = endTime - startTime;
             return (int)difference.TotalMinutes;
-        }
-
-        private void ConvertDocxToPdf(string docxFilePath, string pdfFilePath)
-        {
-            // Carregar documento DOCX
-            Document doc = new Document();
-            doc.LoadFromFile(docxFilePath);
-
-            // Salvar como PDF
-            doc.SaveToFile(pdfFilePath, FileFormat.PDF);
         }
 
     }

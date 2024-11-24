@@ -51,11 +51,11 @@ namespace Solucao.Tests
             var mD5ServiceMock = new Mock<IMD5Service>();
             var userService = new UserService(repositoryMock.Object, _mapper, mD5ServiceMock.Object, historyMock.Object);
 
-            repositoryMock.Setup(repo => repo.GetAll())
+            repositoryMock.Setup(repo => repo.GetAll(true))
                 .ReturnsAsync(new List<User>());
 
             // Act
-            var result = await userService.GetAll();
+            var result = await userService.GetAll(true);
 
             // Assert
             Assert.NotNull(result);

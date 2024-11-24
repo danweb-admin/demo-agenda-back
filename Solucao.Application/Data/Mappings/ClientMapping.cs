@@ -152,6 +152,12 @@ namespace Solucao.Application.Data.Mappings
                 .HasColumnType("varchar(20)")
                 .HasMaxLength(20);
 
+            builder.Property(c => c.Discount)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Property(c => c.Freight)
+                .HasColumnType("decimal(18,2)");
+
             builder.Property(c => c.EquipamentValues)
                 .HasColumnType("varchar(1500)")
                 .HasMaxLength(1500);

@@ -46,6 +46,11 @@ namespace Solucao.Application.Data
         public DbSet<EquipamentConsumable> EquipamentConsumables { get; set; }
         public DbSet<CalendarEquipamentConsumable> CalendarEquipamentConsumables { get; set; }
         public DbSet<CalendarSpecificationConsumables> CalendarSpecificationConsumables { get; set; }
+        public DbSet<EquipmentRelationship> EquipmentRelantionships { get; set; }
+        public DbSet<EquipmentRelationshipEquipment> EquipmentRelationshipEquipment { get; set; }
+        public DbSet<ClientEquipment> ClientEquipment { get; set; }
+        public DbSet<TimeValue> TimeValues { get; set; }
+        public DbSet<ClientSpecification> ClientSpecifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -70,7 +75,11 @@ namespace Solucao.Application.Data
             modelBuilder.ApplyConfiguration(new EquipamentConsumableMapping());
             modelBuilder.ApplyConfiguration(new CalendarEquipamentConsumableMapping());
             modelBuilder.ApplyConfiguration(new CalendarSpecificationConsumableMapping());
-
+            modelBuilder.ApplyConfiguration(new EquipmentRelantionshipMapping());
+            modelBuilder.ApplyConfiguration(new EquipmentRelationshipEquipmentMapping());
+            modelBuilder.ApplyConfiguration(new TimeValuesMapping());
+            modelBuilder.ApplyConfiguration(new ClientEquipmentMapping());
+            modelBuilder.ApplyConfiguration(new ClientSpecificationMapping());
 
             // Relationship
             modelBuilder.Entity<State>()
@@ -124,6 +133,10 @@ namespace Solucao.Application.Data
                .HasMany(c => c.CalendarSpecifications)
                .WithOne(e => e.Specification);
 
+            modelBuilder.Entity<Client>()
+               .HasMany(c => c.ClientEquipment)
+               .WithOne(e => e.Client);
+
             modelBuilder.Entity<Specification>()
                 .HasMany(c => c.EquipamentSpecifications)
                 .WithOne(e => e.Specification);
@@ -155,6 +168,15 @@ namespace Solucao.Application.Data
             modelBuilder.Entity<EquipamentConsumable>()
                 .HasOne(x => x.Consumable)
                 .WithMany(x => x.EquipamentConsumables);
+
+            modelBuilder.Entity<EquipmentRelationship>()
+                .HasMany(c => c.equipmentRelationshipEquipment)
+                .WithOne(c => c.EquipmentRelationship);
+
+            modelBuilder.Entity<ClientSpecification>()
+                .HasOne(x => x.Client)
+                .WithMany(x => x.ClientSpecifications);
+
 
             base.OnModelCreating(modelBuilder);
         }

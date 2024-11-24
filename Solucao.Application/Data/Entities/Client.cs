@@ -41,8 +41,19 @@ namespace Solucao.Application.Data.Entities
         public string Rg { get; set; }
         public string Ie { get; set; }
         public string EquipamentValues { get; set; }
+        public decimal Discount { get; set; }
+        public decimal Freight { get; set; }
         public City City { get; set; }
         public State State { get; set; }
+        public ICollection<ClientEquipment> ClientEquipment { get; set; }
+        public ICollection<ClientSpecification> ClientSpecifications { get; set; }
+
+
+        public Client()
+        {
+            ClientEquipment = new List<ClientEquipment>();
+            ClientSpecifications = new List<ClientSpecification>();
+        }
 
 
     }

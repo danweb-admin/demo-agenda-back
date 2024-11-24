@@ -10,5 +10,6 @@ namespace Solucao.Application.Contracts.Requests
     {
         public bool Ativo { get; set; }
         public string Search { get; set; } = string.Empty;
+        public Guid Id { get; set; }
     }
 }

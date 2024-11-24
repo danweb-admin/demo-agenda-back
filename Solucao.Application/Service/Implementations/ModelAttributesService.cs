@@ -31,7 +31,7 @@ namespace Solucao.Application.Service.Implementations
 
         public async Task<IEnumerable<ModelAttributeViewModel>> GetAll(Guid modelId)
         {
-            return mapper.Map<IEnumerable<ModelAttributeViewModel>>(await repository.GetAll(modelId));
+            return mapper.Map<IEnumerable<ModelAttributeViewModel>>(await repository.GetAll());
         }
 
         public async Task<ValidationResult> Remove(Guid id)

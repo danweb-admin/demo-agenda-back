@@ -14,5 +14,9 @@ namespace Solucao.Application.Data.Interfaces
         Task<Client> GetById(Guid Id);
         Task<ValidationResult> Add(Client client);
         Task<ValidationResult> Update(Client client);
+        Task<ValidationResult> AddClientEquipmentAndTimeValues(Client client);
+        Task<decimal> GetEquipmentValueByClient(Guid clientId, Guid equipmentId, string time);
+        Task<IEnumerable<ClientSpecification>> GetSpecsByClient(Guid clientId);
+
     }
 }

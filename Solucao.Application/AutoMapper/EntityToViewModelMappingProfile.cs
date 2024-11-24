@@ -30,6 +30,18 @@ namespace Solucao.Application.AutoMapper
             CreateMap<CalendarEquipamentConsumable, CalendarEquipamentConsumablesViewModel>();
             CreateMap<CalendarSpecificationConsumables, CalendarSpecificationConsumablesViewModel>();
 
+            CreateMap<EquipmentRelationship, EquipmentRelationshipViewModel>();
+
+            CreateMap<ClientEquipment, ClientEquipmentViewModel>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.EquipmentRelationship.Name));
+            
+            CreateMap<TimeValue, TimeValueViewModel>()
+                .ForMember(dest => dest.Time_, opt => opt.MapFrom(src => TimeSpan.Parse(src.Time)));
+
+            CreateMap<ClientSpecification, ClientSpecificationViewModel>();
+
+
+
 
 
         }

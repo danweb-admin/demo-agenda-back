@@ -57,22 +57,8 @@ namespace Solucao.Application.Data.Repositories
         {
             try
             {
-                var old = Db.ModelAttributes.Where(x => x.ModelId == model.Id);
 
                 Db.Entry(model).State = EntityState.Modified;
-
-                // remove old
-                foreach (var item in old)
-                {
-                    Db.Entry(item).State = EntityState.Deleted;
-                }
-                await Db.SaveChangesAsync();
-                // add new
-                foreach (var item in model.ModelAttributes)
-                {
-                    Db.Entry(item).State = EntityState.Added;
-                }
-
                 await Db.SaveChangesAsync();
                 return ValidationResult.Success;
             }

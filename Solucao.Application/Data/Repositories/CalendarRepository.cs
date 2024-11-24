@@ -1,7 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DocumentFormat.OpenXml.InkML;
+using Microsoft.EntityFrameworkCore;
 using NetDevPack.Data;
 using Solucao.Application.Contracts.Response;
 using Solucao.Application.Data.Entities;
+using Solucao.Application.Data.Results;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -24,9 +26,11 @@ namespace Solucao.Application.Data.Repositories
             DbSet = Db.Set<Calendar>();
         }
 
+
+        
+
         public async Task<IEnumerable<Calendar>> GetAll(DateTime date)
         {
-            
 
             return await Db.Calendars.Include(x => x.Equipament)
                                          .Include(x => x.Client.City)
@@ -226,6 +230,10 @@ namespace Solucao.Application.Data.Repositories
             }
 
         }
+
+        
+
+
 
         public async Task<IEnumerable<Calendar>> Availability(List<Guid> equipamentIds, int month, int year)
         {

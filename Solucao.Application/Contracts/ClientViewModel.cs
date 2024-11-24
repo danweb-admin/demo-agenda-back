@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Solucao.Application.Data.Entities;
 
 namespace Solucao.Application.Contracts
 {
@@ -48,5 +49,15 @@ namespace Solucao.Application.Contracts
 
         public object City { get; set; }
         public object State { get; set; }
+        public ICollection<ClientEquipmentViewModel> ClientEquipment { get; set; }
+        public ICollection<ClientSpecificationViewModel> ClientSpecifications { get; set; }
+
+        public ClientViewModel()
+        {
+            ClientEquipment = new List<ClientEquipmentViewModel>();
+            ClientSpecifications = new List<ClientSpecificationViewModel>();
+        }
+
+
     }
 }

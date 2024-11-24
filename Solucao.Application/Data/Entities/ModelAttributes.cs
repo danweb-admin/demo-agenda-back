@@ -8,8 +8,7 @@ namespace Solucao.Application.Data.Entities
         public string FileAttribute { get; set; }
 		public string TechnicalAttribute { get; set; }
 		public string AttributeType { get; set; }
-		public Guid ModelId { get; set; }
-		public Model Model { get; set; }
+		public int Order { get; set; }
 	}
 }
 

@@ -24,7 +24,7 @@ namespace Solucao.Application.Data.Repositories
 
         public virtual async Task<IEnumerable<Specification>> GetAll()
         {
-            return await Db.Specifications.Include(x => x.EquipamentSpecifications).ToListAsync();
+            return await Db.Specifications.Include(x => x.EquipamentSpecifications).OrderBy(x => x.Name).ToListAsync();
         }
 
         public virtual async Task<Specification> GetById(Guid Id)

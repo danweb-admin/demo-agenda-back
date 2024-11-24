@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Solucao.Application.Service.Implementations
@@ -43,6 +44,23 @@ namespace Solucao.Application.Service.Implementations
             _equipament.UpdatedAt = DateTime.Now;
 
             return equipamentRepository.Update(_equipament);
+        }
+
+        public async Task<IEnumerable<EquipamentViewModel>> GetAllDistinct(bool ativo)
+        {
+            var equipament = mapper.Map<IEnumerable<EquipamentViewModel>>(await equipamentRepository.GetAll(ativo));
+            var retorno = new List<EquipamentViewModel>();
+            string pattern = @"[^a-zA-Z\s]";
+
+            foreach (var item in equipament)
+            {
+                string result = Regex.Replace(item.Name, pattern, string.Empty);
+                if (!retorno.Any(x => x.Name == result.Trim()))
+                    retorno.Add(new EquipamentViewModel { Name = result.Trim(), Id = item.Id });
+
+            }
+
+            return retorno;
         }
     }
 }

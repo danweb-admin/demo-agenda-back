@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Solucao.Application.Contracts;
+using Solucao.Application.Contracts.Response;
 using Solucao.Application.Data.Entities;
 using Solucao.Application.Data.Interfaces;
 using Solucao.Application.Data.Repositories;
@@ -18,14 +19,22 @@ namespace Solucao.Application.Service.Implementations
     public class ClientService : IClientService
     {
         private IClientRepository clientRepository;
+        private ClientEquipmentRepository clientEquipmentRepository;
         private IEquipamentRepository equipamentRepository;
-
+        private EquipmentRelationshipRepository equipmentRelationshipRepository;
+        private TimeValuesRepository timeValuesRepository;
+        private ClientSpeficationRepository clientSpecificationRepository;
         private readonly IMapper mapper;
+        private List<string> timeList;
 
-        public ClientService(IClientRepository _clientRepository, IMapper _mapper, IEquipamentRepository _equipamentRepository)
+        public ClientService(IClientRepository _clientRepository, IMapper _mapper, IEquipamentRepository _equipamentRepository, EquipmentRelationshipRepository _equipmentRelationshipRepository, TimeValuesRepository _timeValuesRepository, ClientEquipmentRepository _clientEquipmentRepository, ClientSpeficationRepository _clientSpecificationRepository)
         {
             clientRepository = _clientRepository;
             equipamentRepository = _equipamentRepository;
+            equipmentRelationshipRepository = _equipmentRelationshipRepository;
+            timeValuesRepository = _timeValuesRepository;
+            clientEquipmentRepository = _clientEquipmentRepository;
+            clientSpecificationRepository = _clientSpecificationRepository;
             mapper = _mapper;
 
         }
@@ -40,20 +49,48 @@ namespace Solucao.Application.Service.Implementations
 
         public async Task<IEnumerable<ClientViewModel>> GetAll(bool ativo, string search)
         {
-            return mapper.Map<IEnumerable<ClientViewModel>>(await clientRepository.GetAll(ativo,search));
+            var result = mapper.Map<IEnumerable<ClientViewModel>>(await clientRepository.GetAll(ativo, search));
+
+            foreach (var item in result)
+            {
+                foreach (var _item in item.ClientEquipment)
+                {
+                    _item.TimeValues = _item.TimeValues.OrderBy(x => x.Time_).ToList();
+                }
+            }
+
+            return result;
         }
 
-        public Task<ClientViewModel> GetById(Guid Id)
+        public async Task<ClientViewModel> GetById(Guid? Id)
         {
-            return mapper.Map<Task<ClientViewModel>>(clientRepository.GetById(Id));
+            if (Id.HasValue)
+            {
+                var result = mapper.Map<ClientViewModel>(await clientRepository.GetById(Id.Value));
+
+                foreach (var _item in result.ClientEquipment)
+                {
+                    _item.TimeValues = _item.TimeValues.OrderBy(x => x.Time_).ToList();
+                }
+
+                return result;
+            }
+
+            return new ClientViewModel
+            {
+                ClientEquipment = await ReturnClientEquip()
+            };
+            
         }
 
-        public Task<ValidationResult> Update(ClientViewModel client)
+        public async Task<ValidationResult> Update(ClientViewModel client)
         {
             client.UpdatedAt = DateTime.Now;
             var _client = mapper.Map<Client>(client);
 
-            return clientRepository.Update(_client);
+            await clientSpecificationRepository.RemoveAllByClient(_client.Id);
+
+            return await clientRepository.Update(_client);
         }
 
         public async Task<decimal> GetValueByEquipament(Guid clientId, Guid equipamentId, string startTime, string endTime)
@@ -66,24 +103,177 @@ namespace Solucao.Application.Service.Implementations
 
             var now = DateTime.Now;
 
-            var _startTime = new DateTime(now.Year, now.Month, now.Day,int.Parse(startTime.Substring(0,2)), int.Parse(startTime.Substring(2)),0);
+            var _startTime = new DateTime(now.Year, now.Month, now.Day, int.Parse(startTime.Substring(0, 2)), int.Parse(startTime.Substring(2)), 0);
             var _endTime = new DateTime(now.Year, now.Month, now.Day, int.Parse(endTime.Substring(0, 2)), int.Parse(endTime.Substring(2)), 0);
 
             TimeSpan difference = _endTime - _startTime;
             var rentalTime = difference.TotalHours;
 
-            var split = client.EquipamentValues.Split("->");
+            var rentalTimeString = Utils.Helpers.FormatTime((decimal)rentalTime);
 
-            foreach (var line in split)
+            var result = await clientRepository.GetEquipmentValueByClient(client.Id, equipament.Id, rentalTimeString);
+
+            if (result != 0)
+                return result;
+
+            throw new CalendarNoValueException("Não foi encontrado o valor para a Locação no cadastro do cliente");
+        }
+
+        public async Task AdjustEquipmentValues()
+        {
+            var clients = await clientRepository.GetAll(true, "");
+            var equipmentRelationship = await equipmentRelationshipRepository.GetAll(true);
+            createTimeList();
+
+            foreach (var item in equipmentRelationship)
             {
-                if (string.IsNullOrEmpty(line))
-                    continue;
-
-                var strings = line.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-                var equipamento = strings[0].Trim();
-
-                if (equipament.Name.ToUpper().Contains(equipamento))
+                foreach (var client in clients)
                 {
+                    if (client.ClientEquipment.Any(x => x.EquipmentRelationshipId == item.Id))
+                        continue;
+
+                    var clientEquipment = new ClientEquipment
+                    {
+                        Id = Guid.NewGuid(),
+                        ClientId = client.Id,
+                        EquipmentRelationshipId = item.Id
+                    };
+
+                    await clientEquipmentRepository.Add(clientEquipment);
+                    var timeValues = new List<TimeValue>();
+
+                    foreach (var time in timeList)
+                    {
+                        var timeValue = new TimeValue
+                        {
+                            Id = Guid.NewGuid(),
+                            Value = 0,
+                            Time = time,
+                            ClientEquipmentId = clientEquipment.Id
+
+                        };
+
+                        timeValues.Add(timeValue);
+                    }
+
+                    await timeValuesRepository.Add(timeValues);
+                    
+                }
+
+            }
+        }
+
+        public async Task<IEnumerable<ClientEquipmentNamesViewModel>> ClientEquipment(string clientName)
+        {
+            var clients = await clientRepository.GetAll(true, clientName);
+            var list = new List<ClientEquipmentNamesViewModel>();
+
+            foreach (var client in clients)
+            {
+                var equips = await clientEquipmentRepository.GetAllByClient(client.Id);
+                var equipNames = string.Join(',', equips.Select(x => x.EquipmentRelationship.Name));
+                list.Add(new ClientEquipmentNamesViewModel {
+                        ClientId = client.Id,
+                        ClientName = client.Name,
+                        EquipNames = equipNames
+                });
+            }
+            return list;
+        }
+
+        public async Task<ValidationResult> ClientEquipmentSave(ClientEquipmentNamesViewModel viewModel)
+        {
+            var result = await clientEquipmentRepository.RemoveAllByClient(viewModel.ClientId);
+            createTimeList();
+
+            foreach (var item in viewModel.EquipmentId)
+            {
+                var equipmentRelationship = await equipmentRelationshipRepository.GetByName(item);
+
+                var clientEquipment = new ClientEquipment
+                {
+                    Id = Guid.NewGuid(),
+                    ClientId = viewModel.ClientId,
+                    EquipmentRelationshipId = equipmentRelationship.Id
+                };
+
+                await clientEquipmentRepository.Add(clientEquipment);
+                var timeValues = new List<TimeValue>();
+
+                foreach (var time in timeList)
+                {
+                    var timeValue = new TimeValue
+                    {
+                        Id = Guid.NewGuid(),
+                        Value = 0,
+                        Time = time,
+                        ClientEquipmentId = clientEquipment.Id
+
+                    };
+
+                    timeValues.Add(timeValue);
+                }
+
+                await timeValuesRepository.Add(timeValues);
+            }
+
+            return ValidationResult.Success;
+        }
+
+        public async Task<List<ClientEquipmentViewModel>> ReturnClientEquip()
+        {
+            var equipmentRelationship = mapper.Map<List<EquipmentRelationshipViewModel>>(await equipmentRelationshipRepository.GetAll(true));
+            var clientEquip = new List<ClientEquipmentViewModel>();
+            createTimeList();
+
+            foreach (var item in equipmentRelationship)
+            {
+                
+                var clientEquipment = new ClientEquipmentViewModel
+                {
+                    Id = Guid.NewGuid(),
+                    EquipmentRelationshipId = item.Id.Value,
+                    EquipmentRelationship = item,
+                    Name = item.Name
+                };
+                    
+                var timeValues = new List<TimeValueViewModel>();
+
+                foreach (var time in timeList)
+                {
+                    var timeValue = new TimeValueViewModel
+                    {
+                        Id = Guid.NewGuid(),
+                        Value = 0,
+                        Time = time,
+                        ClientEquipmentId = clientEquipment.Id
+
+                    };
+
+                    timeValues.Add(timeValue);
+                }
+                clientEquipment.TimeValues = timeValues;
+                clientEquip.Add(clientEquipment);
+
+            }
+            return clientEquip;
+        }
+
+        public async Task MigrateClientValues()
+        {
+            var clients = await clientRepository.GetAll(true, "");
+
+            foreach (var client in clients)
+            {
+                var split = client.EquipamentValues.Split("->");
+
+                foreach (var line in split)
+                {
+                    if (string.IsNullOrEmpty(line))
+                        continue;
+
+                    var strings = line.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+                    var equipamento = strings[0].Trim();
 
                     for (int i = 0; i < strings.Length; i++)
                     {
@@ -92,20 +282,68 @@ namespace Solucao.Application.Service.Implementations
 
                         var hoursValues = strings[i].Replace("-", "–").Split("–");
 
+                        if (hoursValues.Length < 2)
+                            continue;
+
                         var hours = hoursValues[0].Trim();
                         var value = decimal.Parse(hoursValues[1].Trim().Replace(".", "").Replace(",", "."));
 
-                        var hr = int.Parse(Regex.Replace(hours.Trim(), @"[^\d]", ""));
+                        var hr = decimal.Parse(Regex.Replace(hours.Trim().Replace(",","."), @"[a-zA-Z]", ""));
 
-                        if (rentalTime <= hr)
-                            return value;
-                        
+                        var time = Utils.Helpers.FormatTime(hr);
+
+                        var timeValue =  await timeValuesRepository.GetTimeValue(time, equipamento, client.Id);
+
+                        if (timeValue != null)
+                        {
+                            timeValue.Value = value;
+                            await timeValuesRepository.Update(timeValue);
+                        }
                     }
+                    //}
                 }
             }
 
-            throw new CalendarNoValueException("Não foi encontrado o valor para a Locação no cadastro do cliente");
+        }
+
+        private void createTimeList()
+        {
+            timeList = new List<string>
+            {
+                "00:30",
+                "01:00",
+                "01:30",
+                "02:00",
+                "02:30",
+                "03:00",
+                "03:30",
+                "04:00",
+                "04:30",
+                "05:00",
+                "05:30",
+                "06:00",
+                "06:30",
+                "07:00",
+                "07:30",
+                "08:00",
+                "08:30",
+                "09:00",
+                "09:30",
+                "10:00",
+                "10:30",
+                "11:00",
+                "11:30",
+                "12:00",
+                "12:30",
+                "13:00",
+                "13:30",
+                "14:00"
+            };
 
         }
+
+        
+
+        
     }
 }
