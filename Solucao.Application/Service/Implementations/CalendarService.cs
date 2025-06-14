@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using Calendar = Solucao.Application.Data.Entities.Calendar;
 
 
+
 namespace Solucao.Application.Service.Implementations
 {
     public class CalendarService : ICalendarService
