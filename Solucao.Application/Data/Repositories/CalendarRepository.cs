@@ -70,6 +70,13 @@ namespace Solucao.Application.Data.Repositories
                         .FirstOrDefaultAsync(x => x.Id == id);
         }
 
+        public async Task<Calendar> GetByUid(string uid)
+        {
+            return await Db.Calendars
+                        .FirstOrDefaultAsync(x => x.Uid == uid);
+        }
+
+
         public async Task<ValidationResult> Add(Calendar calendar)
         {
             try

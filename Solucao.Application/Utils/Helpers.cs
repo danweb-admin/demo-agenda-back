@@ -20,6 +20,20 @@ namespace Solucao.Application.Utils
 
             return tempoFormatado;
         }
+
+        public static double RentalTime(string startTime, string endTime)
+        {
+            startTime = startTime.Replace(":", "");
+            endTime = endTime.Replace(":", "");
+            var now = DateTime.Now;
+
+            var _startTime = new DateTime(now.Year, now.Month, now.Day, int.Parse(startTime.Substring(0, 2)), int.Parse(startTime.Substring(2)), 0);
+            var _endTime = new DateTime(now.Year, now.Month, now.Day, int.Parse(endTime.Substring(0, 2)), int.Parse(endTime.Substring(2)), 0);
+
+            TimeSpan difference = _endTime - _startTime;
+
+            return difference.TotalHours;
+        }
     }
 }
 

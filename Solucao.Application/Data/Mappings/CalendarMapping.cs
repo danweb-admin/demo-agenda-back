@@ -86,6 +86,9 @@ namespace Solucao.Application.Data.Mappings
 
             builder.Property(c => c.ContractPath).
                 HasColumnType("varchar(250)");
+
+            builder.Property(c => c.Uid).
+                HasColumnType("varchar(300)");
         }
     }
 }

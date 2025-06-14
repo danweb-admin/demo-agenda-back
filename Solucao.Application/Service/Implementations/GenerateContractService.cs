@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -87,6 +88,8 @@ namespace Solucao.Application.Service.Implementations
                 calendar.ContractPath = copiedFile;
                 calendar.UpdatedAt = DateTime.Now;
                 calendar.ContractMade = true;
+
+                ConvertDocxToPdf(copiedFile, contractPath, calendar.Date);
 
                 await calendarRepository.Update(mapper.Map<Calendar>(calendar));
 
@@ -305,6 +308,23 @@ namespace Solucao.Application.Service.Implementations
 
             TimeSpan difference = endTime - startTime;
             return (int)difference.TotalMinutes;
+        }
+
+        private void ConvertDocxToPdf(string inputFilePath, string outputDirectory, DateTime date)
+        {
+            
+            var yearMonth = date.ToString("yyyy-MM");
+            var day = date.ToString("dd");
+
+            var createdDirectory = $"{outputDirectory}/{yearMonth}/{day}";
+
+            var process = new Process();
+            process.StartInfo.FileName = "/Applications/LibreOffice.app/Contents/MacOS/soffice";
+            process.StartInfo.Arguments = $"--headless --convert-to pdf --outdir \"{createdDirectory}\" \"{inputFilePath}\"";
+            process.StartInfo.CreateNoWindow = true;
+            process.StartInfo.UseShellExecute = false;
+            process.Start();
+            process.WaitForExit();
         }
 
     }

@@ -95,19 +95,11 @@ namespace Solucao.Application.Service.Implementations
 
         public async Task<decimal> GetValueByEquipament(Guid clientId, Guid equipamentId, string startTime, string endTime)
         {
-            startTime = startTime.Replace(":", "");
-            endTime = endTime.Replace(":", "");
 
             var client = await clientRepository.GetById(clientId);
             var equipament = await equipamentRepository.GetById(equipamentId);
 
-            var now = DateTime.Now;
-
-            var _startTime = new DateTime(now.Year, now.Month, now.Day, int.Parse(startTime.Substring(0, 2)), int.Parse(startTime.Substring(2)), 0);
-            var _endTime = new DateTime(now.Year, now.Month, now.Day, int.Parse(endTime.Substring(0, 2)), int.Parse(endTime.Substring(2)), 0);
-
-            TimeSpan difference = _endTime - _startTime;
-            var rentalTime = difference.TotalHours;
+            var rentalTime = Utils.Helpers.RentalTime(startTime, endTime);
 
             var rentalTimeString = Utils.Helpers.FormatTime((decimal)rentalTime);
 

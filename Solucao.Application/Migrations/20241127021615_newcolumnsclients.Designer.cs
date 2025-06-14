@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Solucao.Application.Data;
 
 namespace Solucao.Application.Migrations
 {
     [DbContext(typeof(SolucaoContext))]
-    partial class SolucaoContextModelSnapshot : ModelSnapshot
+    [Migration("20241127021615_newcolumnsclients")]
+    partial class newcolumnsclients
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -107,9 +109,6 @@ namespace Solucao.Application.Migrations
 
                     b.Property<int>("TravelOn")
                         .HasColumnType("int");
-
-                    b.Property<string>("Uid")
-                        .HasColumnType("varchar(300)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime");

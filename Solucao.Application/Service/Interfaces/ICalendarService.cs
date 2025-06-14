@@ -1,4 +1,6 @@
 ﻿using Solucao.Application.Contracts;
+using Solucao.Application.Contracts.Requests;
+using Solucao.Application.Contracts.Response;
 using Solucao.Application.Data.Entities;
 using System;
 using System.Collections.Generic;
@@ -22,6 +24,8 @@ namespace Solucao.Application.Service.Interfaces
         Task<ValidationResult> ValidateLease(DateTime date, Guid clientId, Guid equipamentId, IList<CalendarSpecifications> specifications ,string startTime, string endTime);
         Task<IEnumerable<CalendarViewModel>> Schedules(DateTime startDate, DateTime endDate, Guid? clientId, List<Guid> equipamentIds, List<Guid> driverId, Guid? techniqueId, string status);
         Task<string> Availability(List<Guid> equipamentIds, int month, int year);
+        Task<List<BulkSchedulingResponse>> BulkScheduling(BulkSchedulingRequest request, Guid user);
+        Task<List<string>> SchedulingIntegration(DateTime startDate, Guid? user);
 
     }
 }
