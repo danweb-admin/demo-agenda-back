@@ -15,6 +15,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Ical.Net;
 using Calendar = Solucao.Application.Data.Entities.Calendar;
 
 
@@ -492,30 +493,30 @@ namespace Solucao.Application.Service.Implementations
 
         public async Task<List<string>>  SchedulingIntegration(DateTime startDate, Guid? user)
         {
-            var url = Environment.GetEnvironmentVariable("CalendarURL");
+            //var url = Environment.GetEnvironmentVariable("CalendarURL");
 
-            using HttpClient client = new HttpClient();
-            string icsContent = await client.GetStringAsync(url);
+            //using HttpClient client = new HttpClient();
+            //string icsContent = await client.GetStringAsync(url);
 
-            var scheduling = Ical.Net.Calendar.Load(icsContent);
+            //var scheduling = Ical.Net.Calendar.Load(icsContent);
 
-            var events = scheduling.Events.Where(x => x.LastModified.AsSystemLocal >= startDate);
+            //var events = scheduling.Events.Where(x => x.LastModified.AsSystemLocal >= startDate);
 
-            foreach (var item in events)
-            {
-                var calendar = await calendarRepository.GetByUid(item.Uid);
+            //foreach (var item in events)
+            //{
+            //    var calendar = await calendarRepository.GetByUid(item.Uid);
 
-                var split = item.Summary.Split("-");
+            //    var split = item.Summary.Split("-");
 
-                if (calendar == null)
-                {
+            //    if (calendar == null)
+            //    {
 
-                }
+            //    }
 
-            }
+            //}
 
 
-            return null;
+            //return null;
             throw new NotImplementedException();
         }
     }
