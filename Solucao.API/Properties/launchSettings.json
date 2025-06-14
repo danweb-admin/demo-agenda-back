@@ -23,7 +23,15 @@
       "launchUrl": "swagger",
       "applicationUrl": "https://localhost:8091;http://localhost:8080",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DbServer": "161.35.255.131",
+        "DbPort": "31039",
+        "DbUser": "SA",
+        "Database": "DemoAgenDanWeb",
+        "Password": "RccManager@2023",
+        "DocsPath": "/Users/will.i.am/Downloads/Contratos/",
+        "KeyMD5": "QmVsbGFTa2luQDIwMjM=",
+        "ModelDocsPath": "/Users/will.i.am/Downloads/Modelos/"
       }
     },
     "Docker": {

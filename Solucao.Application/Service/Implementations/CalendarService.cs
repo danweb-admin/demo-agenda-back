@@ -15,7 +15,6 @@ using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Ical.Net;
 using Calendar = Solucao.Application.Data.Entities.Calendar;
 
 
