@@ -23,20 +23,7 @@
       "launchUrl": "swagger",
       "applicationUrl": "https://localhost:8091;http://localhost:8080",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "DbServer": "161.35.255.131",
-        "DbPort": "31039",
-        "DbUser": "SA",
-        "Database": "DemoAgenDanWeb",
-        "Password": "RccManager@2023",
-        "DocsPath": "/Users/will.i.am/Downloads/Contratos/",
-        "KeyMD5": "QmVsbGFTa2luQDIwMjM=",
-        "ModelDocsPath": "/Users/will.i.am/Documents/ModelosContratos/SolucaLaser/",
-        "IdPasta": "fd1cd075-6d43-4b77-8cec-a55458f9ba74",
-        "IdResponsavel": "2e0ae3b7-e71d-40f5-8681-6fd2bade86e9",
-        "ApiArqSign": "https://api-rest.arqsign.com/",
-        "AppKey": "6f7ce74b-534e-4812-add5-fda6e4e7bfef",
-        "SubscriptionKey": "27ea0797cced48719a3ecd0b13739bd7"
+        "ASPNETCORE_ENVIRONMENT": "Development"
 
       }
     },

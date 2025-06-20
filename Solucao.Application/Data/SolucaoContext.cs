@@ -24,7 +24,6 @@ namespace Solucao.Application.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer("Data Source=161.35.255.131,31039;Initial Catalog=DemoAgenDanWeb; User ID=sa;Password=RccManager@2023");
 
         }
 
