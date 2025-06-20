@@ -29,18 +29,20 @@ namespace Solucao.Application.Service.Implementations
         private readonly IMapper mapper;
         private readonly CalendarRepository calendarRepository;
         private readonly ModelRepository modelRepository;
+        private readonly DigitalSignatureRepository assinaturaRepository;
         private readonly ModelAttributesRepository modelAttributesRepository;
         private readonly IClientRepository clientRepository;
         private CultureInfo cultureInfo = new CultureInfo("pt-BR");
 
 
-        public GenerateContractService(IMapper _mapper, CalendarRepository _calendarRepository, ModelRepository _modelRepository, IClientRepository _clientRepository, ModelAttributesRepository _modelAttributesRepository)
+        public GenerateContractService(IMapper _mapper, CalendarRepository _calendarRepository, ModelRepository _modelRepository, IClientRepository _clientRepository, ModelAttributesRepository _modelAttributesRepository, DigitalSignatureRepository _assinaturaRepository)
         {
             mapper = _mapper;
             calendarRepository = _calendarRepository;
             modelRepository = _modelRepository;
             clientRepository = _clientRepository;
             modelAttributesRepository = _modelAttributesRepository;
+            assinaturaRepository = _assinaturaRepository;
         }
 
         public async Task<IEnumerable<CalendarViewModel>> GetAllByDayAndContractMade(DateTime date)
@@ -87,11 +89,15 @@ namespace Solucao.Application.Service.Implementations
             {
                 calendar.ContractPath = copiedFile;
                 calendar.UpdatedAt = DateTime.Now;
+                calendar.FileNameDocx = contractFileName;
+                calendar.FileNamePdf = contractFileName.Replace("docx","pdf");
                 calendar.ContractMade = true;
 
                 ConvertDocxToPdf(copiedFile, contractPath, calendar.Date);
 
                 await calendarRepository.Update(mapper.Map<Calendar>(calendar));
+
+                await AddDigitalSignature(calendar.Id.Value, contractFileName);
 
                 return ValidationResult.Success;
             }
@@ -325,6 +331,26 @@ namespace Solucao.Application.Service.Implementations
             process.StartInfo.UseShellExecute = false;
             process.Start();
             process.WaitForExit();
+        }
+
+        private async Task AddDigitalSignature(Guid calendarId, string inputFilePath)
+        {
+            var idPasta = Environment.GetEnvironmentVariable("IdPasta");
+            var idResponsavel = Environment.GetEnvironmentVariable("IdResponsavel");
+
+            var assinatura = new DigitalSignature
+            {
+                Id = new Guid(),
+                CalendarId = calendarId,
+                IdPasta = Guid.Parse(idPasta),
+                IdResponsavel = Guid.Parse(idResponsavel),
+                NomeProcesso = inputFilePath.Replace(".docx", ".pdf"),
+                Status = "pending",
+                CreatedAt = DateTime.Now
+
+            };
+
+            await assinaturaRepository.Add(assinatura);
         }
 
     }

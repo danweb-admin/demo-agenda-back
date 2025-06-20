@@ -34,6 +34,8 @@ namespace Solucao.Application.Contracts
         public decimal Value { get; set; }
         public decimal Amount { get; set; }
         public string ContractPath { get; set; }
+        public string FileNameDocx { get; set; }
+        public string FileNamePdf { get; set; }
         public string DownloadFileName { get; set; }
         public int RentalTime { get; set; }
         public decimal Additional1 { get; set; }

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Solucao.Application.Contracts;
+using Solucao.Application.Contracts.Requests;
 using Solucao.Application.Contracts.Response;
 using Solucao.Application.Data.Entities;
 using Solucao.Application.Data.Interfaces;
@@ -24,10 +25,12 @@ namespace Solucao.Application.Service.Implementations
         private EquipmentRelationshipRepository equipmentRelationshipRepository;
         private TimeValuesRepository timeValuesRepository;
         private ClientSpeficationRepository clientSpecificationRepository;
+        private ClientDigialSignatureRepository assinaturaRepository;
+
         private readonly IMapper mapper;
         private List<string> timeList;
 
-        public ClientService(IClientRepository _clientRepository, IMapper _mapper, IEquipamentRepository _equipamentRepository, EquipmentRelationshipRepository _equipmentRelationshipRepository, TimeValuesRepository _timeValuesRepository, ClientEquipmentRepository _clientEquipmentRepository, ClientSpeficationRepository _clientSpecificationRepository)
+        public ClientService(IClientRepository _clientRepository, IMapper _mapper, IEquipamentRepository _equipamentRepository, EquipmentRelationshipRepository _equipmentRelationshipRepository, TimeValuesRepository _timeValuesRepository, ClientEquipmentRepository _clientEquipmentRepository, ClientSpeficationRepository _clientSpecificationRepository, ClientDigialSignatureRepository _assinaturaRepository)
         {
             clientRepository = _clientRepository;
             equipamentRepository = _equipamentRepository;
@@ -35,6 +38,7 @@ namespace Solucao.Application.Service.Implementations
             timeValuesRepository = _timeValuesRepository;
             clientEquipmentRepository = _clientEquipmentRepository;
             clientSpecificationRepository = _clientSpecificationRepository;
+            assinaturaRepository = _assinaturaRepository;
             mapper = _mapper;
 
         }
@@ -298,6 +302,39 @@ namespace Solucao.Application.Service.Implementations
 
         }
 
+        public async Task AddClientDigitalSignatures()
+        {
+            var clients = await clientRepository.GetAll(true, "");
+
+            foreach (var cli in clients)
+            {
+                var destinatario1 = new ClientDigitalSignature
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "William Nascimento",
+                    Email = "william.nascimento2010@gmail.com",
+                    PartyName = "contratante",
+                    ClientId = cli.Id,
+                    CreatedAt = DateTime.Now,
+                    Active = true,
+                };
+                await assinaturaRepository.Add(destinatario1);
+                var destinatario2 = new ClientDigitalSignature
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Daniele Nascimento",
+                    Email = "danweb.softwares@gmail.com",
+                    PartyName = "contratada",
+                    ClientId = cli.Id,
+                    CreatedAt = DateTime.Now,
+                    Active = true,
+                    
+                };
+                await assinaturaRepository.Add(destinatario2);
+                
+            }
+        }
+
         private void createTimeList()
         {
             timeList = new List<string>
@@ -333,8 +370,6 @@ namespace Solucao.Application.Service.Implementations
             };
 
         }
-
-        
 
         
     }

@@ -36,7 +36,7 @@ namespace Solucao.API.Controllers
         [HttpGet("calendar/get-all")]
         public async Task<IEnumerable<CalendarViewModel>> GetAllAsync([FromQuery] CalendarRequest model)
         {
-            var w = await calendarService.GetAll(model.Date);
+            
             return await calendarService.GetAll(model.Date);
         }
 

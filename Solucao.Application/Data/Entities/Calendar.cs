@@ -34,6 +34,8 @@ namespace Solucao.Application.Data.Entities
         public decimal Freight { get; set; }
         public int RentalTime { get; set; }
         public string ContractPath { get; set; }
+        public string FileNameDocx { get; set; }
+        public string FileNamePdf { get; set; }
         public string Uid { get; set; }
         public User User { get; set; }
         public Person Technique { get; set; }

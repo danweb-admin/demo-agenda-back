@@ -67,6 +67,7 @@ namespace Solucao.Application.Data.Repositories
             return await Db.Calendars
                         .Include(x => x.Equipament)
                         .Include(x => x.Client)
+                        .ThenInclude(x => x.ClientDigitalSignatures)
                         .FirstOrDefaultAsync(x => x.Id == id);
         }
 

@@ -89,6 +89,12 @@ namespace Solucao.Application.Data.Mappings
 
             builder.Property(c => c.Uid).
                 HasColumnType("varchar(300)");
+
+            builder.Property(c => c.FileNameDocx).
+                HasColumnType("varchar(150)");
+
+            builder.Property(c => c.FileNamePdf).
+                HasColumnType("varchar(150)");
         }
     }
 }

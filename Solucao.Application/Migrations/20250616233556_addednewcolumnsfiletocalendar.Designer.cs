@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Solucao.Application.Data;
 
 namespace Solucao.Application.Migrations
 {
     [DbContext(typeof(SolucaoContext))]
-    partial class SolucaoContextModelSnapshot : ModelSnapshot
+    [Migration("20250616233556_addednewcolumnsfiletocalendar")]
+    partial class addednewcolumnsfiletocalendar
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -440,53 +442,6 @@ namespace Solucao.Application.Migrations
                     b.HasIndex("StateId");
 
                     b.ToTable("Clients");
-                });
-
-            modelBuilder.Entity("Solucao.Application.Data.Entities.ClientDigitalSignature", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnName("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("Active")
-                        .HasColumnName("active")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("ClientId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)")
-                        .HasMaxLength(50);
-
-                    b.Property<bool>("IsPF")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)")
-                        .HasMaxLength(50);
-
-                    b.Property<string>("PartyName")
-                        .IsRequired()
-                        .HasColumnType("varchar(30)")
-                        .HasMaxLength(30);
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ClientId");
-
-                    b.ToTable("ClientDigitalSignatures");
                 });
 
             modelBuilder.Entity("Solucao.Application.Data.Entities.ClientEquipment", b =>
@@ -1222,15 +1177,6 @@ namespace Solucao.Application.Migrations
                     b.HasOne("Solucao.Application.Data.Entities.State", "State")
                         .WithMany()
                         .HasForeignKey("StateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Solucao.Application.Data.Entities.ClientDigitalSignature", b =>
-                {
-                    b.HasOne("Solucao.Application.Data.Entities.Client", "Client")
-                        .WithMany("ClientDigitalSignatures")
-                        .HasForeignKey("ClientId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

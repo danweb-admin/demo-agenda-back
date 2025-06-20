@@ -25,6 +25,8 @@ namespace Solucao.Application.Service.Interfaces
 
         Task MigrateClientValues();
 
+        Task AddClientDigitalSignatures();
+
         Task<IEnumerable<ClientEquipmentNamesViewModel>> ClientEquipment(string clientName);
 
         Task<ValidationResult> ClientEquipmentSave(ClientEquipmentNamesViewModel viewModel);

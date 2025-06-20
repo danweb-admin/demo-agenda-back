@@ -23,7 +23,9 @@ namespace Solucao.Application.Data
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        { 
+        {
+            optionsBuilder.UseSqlServer("Data Source=161.35.255.131,31039;Initial Catalog=DemoAgenDanWeb; User ID=sa;Password=RccManager@2023");
+
         }
 
         public DbSet<User> Users { get; set; }
@@ -51,6 +53,11 @@ namespace Solucao.Application.Data
         public DbSet<ClientEquipment> ClientEquipment { get; set; }
         public DbSet<TimeValue> TimeValues { get; set; }
         public DbSet<ClientSpecification> ClientSpecifications { get; set; }
+        public DbSet<DigitalSignature> DigitalSignatures { get; set; }
+        public DbSet<DigitalSignatureEvents> DigitalSignatureEvents { get; set; }
+        public DbSet<ClientDigitalSignature> ClientDigitalSignatures { get; set; }
+
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -80,6 +87,10 @@ namespace Solucao.Application.Data
             modelBuilder.ApplyConfiguration(new TimeValuesMapping());
             modelBuilder.ApplyConfiguration(new ClientEquipmentMapping());
             modelBuilder.ApplyConfiguration(new ClientSpecificationMapping());
+            modelBuilder.ApplyConfiguration(new DigitalSignatureMapping());
+            modelBuilder.ApplyConfiguration(new DigitalSignatureEventsMapping());
+            modelBuilder.ApplyConfiguration(new ClientDigitalSignatureMapping());
+
 
             // Relationship
             modelBuilder.Entity<State>()
@@ -135,6 +146,10 @@ namespace Solucao.Application.Data
 
             modelBuilder.Entity<Client>()
                .HasMany(c => c.ClientEquipment)
+               .WithOne(e => e.Client);
+
+            modelBuilder.Entity<Client>()
+               .HasMany(c => c.ClientDigitalSignatures)
                .WithOne(e => e.Client);
 
             modelBuilder.Entity<Specification>()

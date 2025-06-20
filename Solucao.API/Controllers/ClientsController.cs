@@ -35,6 +35,12 @@ namespace Solucao.API.Controllers
             return await clientService.GetValueByEquipament(clientId,equipamentId,startTime,endTime);
         }
 
+        [HttpGet("client/assinatura-digital")]
+        public async Task GetAssinaturaDigital()
+        {
+             await clientService.AddClientDigitalSignatures();
+        }
+
         [HttpGet("client")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(Client))]
         [SwaggerResponse((int)HttpStatusCode.BadRequest, Type = typeof(ApplicationError))]

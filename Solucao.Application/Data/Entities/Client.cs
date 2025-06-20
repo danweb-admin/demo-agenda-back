@@ -47,12 +47,15 @@ namespace Solucao.Application.Data.Entities
         public State State { get; set; }
         public ICollection<ClientEquipment> ClientEquipment { get; set; }
         public ICollection<ClientSpecification> ClientSpecifications { get; set; }
+        public ICollection<ClientDigitalSignature> ClientDigitalSignatures { get; set; }
+
 
 
         public Client()
         {
             ClientEquipment = new List<ClientEquipment>();
             ClientSpecifications = new List<ClientSpecification>();
+            ClientDigitalSignatures = new List<ClientDigitalSignature>();
         }
 
 

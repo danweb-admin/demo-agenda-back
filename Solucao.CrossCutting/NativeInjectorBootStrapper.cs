@@ -32,6 +32,7 @@ namespace Solucao.CrossCutting
             services.AddScoped<IConsumableService, ConsumableService>();
             services.AddScoped<IEquipmentRelantionshipService, EquipmentRelationshipService>();
             services.AddScoped<IDashboardService, DashboardService>();
+            services.AddScoped<IDigitalSignatureService, DigitalSignatureService>();
             services.AddScoped<TokenService>();
 
             // Infra
@@ -56,6 +57,9 @@ namespace Solucao.CrossCutting
             services.AddScoped<ClientEquipmentRepository>();
             services.AddScoped<ClientSpeficationRepository>();
             services.AddScoped<DashboardRepository>();
+            services.AddScoped<DigitalSignatureRepository>();
+            services.AddScoped<ClientDigialSignatureRepository>();
+
             services.AddScoped<SolucaoContext>();
 
 
