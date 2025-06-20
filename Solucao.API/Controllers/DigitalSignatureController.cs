@@ -61,6 +61,32 @@ namespace Solucao.API.Controllers
 
             return Ok(new { status = "success", receivedAt = DateTime.UtcNow });
         }
+
+        [HttpPut]
+        [HttpPost("webhook-response-put")]
+        public async Task<IActionResult> ReceivePut([FromBody] JsonElement payload)
+        {
+            // Você pode processar o payload aqui
+            Console.WriteLine("Webhook recebido put: " + payload.ToString());
+
+            // Exemplo: logar em arquivo
+            //await System.IO.File.AppendAllTextAsync("webhook_log.txt", payload.ToString() + Environment.NewLine);
+
+            return Ok(new { status = "success", receivedAt = DateTime.UtcNow });
+        }
+
+        [HttpPatch]
+        [HttpPost("webhook-response-patch")]
+        public async Task<IActionResult> ReceivePatch([FromBody] JsonElement payload)
+        {
+            // Você pode processar o payload aqui
+            Console.WriteLine("Webhook recebido patch: " + payload.ToString());
+
+            // Exemplo: logar em arquivo
+            //await System.IO.File.AppendAllTextAsync("webhook_log.txt", payload.ToString() + Environment.NewLine);
+
+            return Ok(new { status = "success", receivedAt = DateTime.UtcNow });
+        }
     }
 }
 
