@@ -41,12 +41,20 @@ namespace Solucao.API.Controllers
         }
 
         [HttpPost("webhook-response")]
-        public async Task<IActionResult> PostAsync([FromBody] DigitalSignatureResponse model)
+        public async Task<IActionResult> PostAsync([FromBody] DigitalSignatureResponse response)
         {
-            Console.WriteLine("**********************");
-            Console.WriteLine(model?.evento);
-            Console.WriteLine(model?.idProcesso);
-            return Ok();
+            try
+            {
+                var result = await service.EventosWebhook(response);
+
+                if (result != null)
+                    return NotFound(result);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex);
+            }
         }
 
         [HttpPost]

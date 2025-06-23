@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Solucao.Application.Contracts;
 using Solucao.Application.Contracts.Requests;
 using Solucao.Application.Contracts.Response;
+using Solucao.Application.Data.Entities;
 using Solucao.Application.Data.Repositories;
 using Solucao.Application.Service.Interfaces;
 
@@ -17,13 +18,16 @@ namespace Solucao.Application.Service.Implementations
 	public class DigitalSignatureService : IDigitalSignatureService
 	{
         private CalendarRepository calendarRepository;
+        private DigitalSignatureEventsRepository eventosRepository;
+
         private DigitalSignatureRepository assinaturaRepository;
         private const string enviarDocumentosParaAssinar = "api/v2/processo/enviar-documento-para-assinar";
 
-        public DigitalSignatureService(CalendarRepository _calendarRepository, DigitalSignatureRepository _assinaturaRepository)
+        public DigitalSignatureService(CalendarRepository _calendarRepository, DigitalSignatureRepository _assinaturaRepository, DigitalSignatureEventsRepository _eventosRepository)
 		{
             calendarRepository = _calendarRepository;
             assinaturaRepository = _assinaturaRepository;
+            eventosRepository = _eventosRepository;
         }
 
         public async Task<ValidationResult> EnviarDocumentoParaAssinar(Guid calendarId)
@@ -122,6 +126,32 @@ namespace Solucao.Application.Service.Implementations
             await assinaturaRepository.Update(assinatura);
 
             return ValidationResult.Success;
+        }
+
+        public async Task<ValidationResult> EventosWebhook(DigitalSignatureResponse response)
+        {
+            var processo = await assinaturaRepository.GetById(response.idProcesso);
+            DigitalSignatureEvents evento = new DigitalSignatureEvents();
+
+            switch (response.idEvento)
+            {
+                case 1:
+                    evento.DataHoraAtual = response.dataHoraAtual;
+                    evento.Evento = response.evento;
+                    evento.IdConta = response.idConta;
+                    evento.IdProcesso = response.idProcesso;
+                    evento.IdWebhook = response.idWebhook;
+                    await eventosRepository.Add(evento);
+                    processo.Status = "in_progress";
+                    await assinaturaRepository.Update(processo);
+                    return ValidationResult.Success;
+                default:
+                    break;
+            }
+
+            
+
+            return null;
         }
     }
 }

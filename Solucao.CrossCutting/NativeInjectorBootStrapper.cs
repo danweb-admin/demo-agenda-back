@@ -58,6 +58,7 @@ namespace Solucao.CrossCutting
             services.AddScoped<ClientSpeficationRepository>();
             services.AddScoped<DashboardRepository>();
             services.AddScoped<DigitalSignatureRepository>();
+            services.AddScoped<DigitalSignatureEventsRepository>();
             services.AddScoped<ClientDigialSignatureRepository>();
 
             services.AddScoped<SolucaoContext>();

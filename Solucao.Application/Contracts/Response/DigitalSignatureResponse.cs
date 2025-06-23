@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+
 namespace Solucao.Application.Contracts.Response
 {
 	public class DigitalSignatureResponse
@@ -9,5 +11,6 @@ namespace Solucao.Application.Contracts.Response
 		public Guid idConta { get; set; }
 		public Guid idWebhook { get; set; }
 		public DateTime dataHoraAtual { get; set; }
+		public ICollection<DigitalSignatureSignatarioResponse> signatarios { get; set; }
 	}
 }

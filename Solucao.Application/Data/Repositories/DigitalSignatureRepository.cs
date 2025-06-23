@@ -57,6 +57,12 @@ namespace Solucao.Application.Data.Repositories
             return await Db.DigitalSignatures
                         .FirstOrDefaultAsync(x => x.CalendarId == calendarId);
         }
+
+        public async Task<DigitalSignature> GetById(Guid idProcesso)
+        {
+            return await Db.DigitalSignatures
+                        .FirstOrDefaultAsync(x => x.IdProcesso == idProcesso);
+        }
     }
 }
 
