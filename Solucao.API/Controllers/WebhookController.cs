@@ -40,6 +40,8 @@ namespace Solucao.API.Controllers
 
             Console.WriteLine("Webhook autenticado com sucesso.");
             Console.WriteLine("Payload recebido: " + body);
+            Console.WriteLine("X-Signature: " + signatureHeader);
+
 
             return Ok(new { status = "Recebido e autenticado" });
         }
