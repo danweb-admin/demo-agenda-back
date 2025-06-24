@@ -5,13 +5,14 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Linq;
+using NetDevPack.Messaging;
 
 namespace Solucao.API.Controllers
 {
     [Route("api/webhook")]
     public class WebhookController : ControllerBase
     {
-        private const string Secret = "minha-chave-secreta-supersegura";
+        private const string Secret = "KnhT1u/dmZEhU2CA0+Sm9bGLwo/k45vFxoxNWfydBES+hbc7buhE4du5iJoOAFYJo5oMgVyWBJ7EgaKFZg8EiQ==";
 
         [HttpPost]
         public async Task<IActionResult> Post()
@@ -24,10 +25,7 @@ namespace Solucao.API.Controllers
             // Pega o HMAC enviado no header
             var signatureHeader = Request.Headers;
 
-            foreach (var item in signatureHeader)
-            {
-                Console.WriteLine($"key: {item.Key} - value: {item.Value}");
-            }
+            var receivedHmac = Request.Headers["HMAC"].ToString();
 
             //if (string.IsNullOrEmpty(signatureHeader))
             //{
@@ -37,15 +35,21 @@ namespace Solucao.API.Controllers
             // Calcula o HMAC local
             var computedSignature = GenerateHmac(body, Secret);
 
-            //// Compara
-            //if (!string.Equals(signatureHeader, computedSignature, StringComparison.OrdinalIgnoreCase))
-            //{
-            //    return Unauthorized("Assinatura inválida");
-            //}
+            // 4. Comparar os valores
+            if (string.Equals(computedSignature, receivedHmac, StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine("Webhook autenticado com sucesso.");
+                Console.WriteLine("Payload recebido: " + body);
+                Console.WriteLine("X-Signature: " + signatureHeader);
 
-            Console.WriteLine("Webhook autenticado com sucesso.");
-            Console.WriteLine("Payload recebido: " + body);
-            Console.WriteLine("X-Signature: " + signatureHeader);
+                return Ok(new { message = "Webhook recebido e validado com sucesso!" });
+            }
+            else
+            {
+                return Unauthorized(new { error = "HMAC inválido" });
+            }
+
+            
 
 
             return Ok(new { status = "Recebido e autenticado" });
@@ -53,10 +57,14 @@ namespace Solucao.API.Controllers
 
         private string GenerateHmac(string payload, string secret)
         {
-            var key = Encoding.UTF8.GetBytes(secret);
-            using var hmac = new HMACSHA256(key);
-            var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
-            return Convert.ToHexString(hash).ToLower();
+            var keyBytes = Encoding.UTF8.GetBytes(secret);
+            var messageBytes = Encoding.UTF8.GetBytes(payload);
+
+            using (var hmac = new HMACSHA256(keyBytes))
+            {
+                var hashBytes = hmac.ComputeHash(messageBytes);
+                return BitConverter.ToString(hashBytes).Replace("-", "").ToLower(); // Hexadecimal (sem hífen)
+            }
         }
     }
 }
