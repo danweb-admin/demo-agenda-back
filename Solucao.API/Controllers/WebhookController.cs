@@ -22,7 +22,12 @@ namespace Solucao.API.Controllers
             Console.WriteLine(body);
 
             // Pega o HMAC enviado no header
-            var signatureHeader = Request.Headers["X-Signature"].FirstOrDefault();
+            var signatureHeader = Request.Headers;
+
+            foreach (var item in signatureHeader)
+            {
+                Console.WriteLine($"key: {item.Key} - value: {item.Value}");
+            }
 
             //if (string.IsNullOrEmpty(signatureHeader))
             //{
