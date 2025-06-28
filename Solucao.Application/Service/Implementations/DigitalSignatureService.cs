@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -15,8 +17,8 @@ using Solucao.Application.Service.Interfaces;
 
 namespace Solucao.Application.Service.Implementations
 {
-	public class DigitalSignatureService : IDigitalSignatureService
-	{
+    public class DigitalSignatureService : IDigitalSignatureService
+    {
         private CalendarRepository calendarRepository;
         private DigitalSignatureEventsRepository eventosRepository;
 
@@ -24,7 +26,7 @@ namespace Solucao.Application.Service.Implementations
         private const string enviarDocumentosParaAssinar = "api/v2/processo/enviar-documento-para-assinar";
 
         public DigitalSignatureService(CalendarRepository _calendarRepository, DigitalSignatureRepository _assinaturaRepository, DigitalSignatureEventsRepository _eventosRepository)
-		{
+        {
             calendarRepository = _calendarRepository;
             assinaturaRepository = _assinaturaRepository;
             eventosRepository = _eventosRepository;
@@ -77,7 +79,7 @@ namespace Solucao.Application.Service.Implementations
 
             var documentos = new List<DigitalSignatureDocumento>();
 
-            byte[] fileBytes = File.ReadAllBytes(locacao.ContractPath.Replace(".docx",".pdf"));
+            byte[] fileBytes = File.ReadAllBytes(locacao.ContractPath.Replace(".docx", ".pdf"));
             string base64String = Convert.ToBase64String(fileBytes);
 
             DigitalSignatureDocumento documento = new DigitalSignatureDocumento
@@ -121,38 +123,85 @@ namespace Solucao.Application.Service.Implementations
 
             var resposta = JsonSerializer.Deserialize<DigitalSignatureResponse>(result);
 
-            assinatura.IdProcesso = resposta.idProcesso;
+            assinatura.IdProcesso = resposta.IdProcesso;
 
             await assinaturaRepository.Update(assinatura);
 
             return ValidationResult.Success;
         }
 
-        public async Task<ValidationResult> EventosWebhook(DigitalSignatureResponse response)
+        public async Task<ValidationResult> EventosWebhook(string response)
         {
-            var processo = await assinaturaRepository.GetById(response.idProcesso);
+            var webhookResponse = JsonSerializer.Deserialize<DigitalSignatureResponse>(response);
+            var processo = await assinaturaRepository.GetById(webhookResponse.IdProcesso);
             DigitalSignatureEvents evento = new DigitalSignatureEvents();
 
-            switch (response.idEvento)
+            var idEvento = webhookResponse.IdEvento;
+            var isEventoComum = new[] { 1, 2, 5, 6, 7, 8 }.Contains(idEvento);
+            var isEventoComSignatario = new[] { 3, 4 }.Contains(idEvento);
+
+            if (isEventoComum || isEventoComSignatario)
             {
-                case 1:
-                    evento.DataHoraAtual = response.dataHoraAtual;
-                    evento.Evento = response.evento;
-                    evento.IdConta = response.idConta;
-                    evento.IdProcesso = response.idProcesso;
-                    evento.IdWebhook = response.idWebhook;
-                    await eventosRepository.Add(evento);
-                    processo.Status = "in_progress";
-                    await assinaturaRepository.Update(processo);
-                    return ValidationResult.Success;
-                default:
-                    break;
+                await PreencherEventoAsync(evento, webhookResponse, incluirSignatario: isEventoComSignatario);
+                await eventosRepository.Add(evento);
+
+                processo.Status = await ProcessStatus(idEvento);
+                await assinaturaRepository.Update(processo);
+
+                return ValidationResult.Success;
             }
 
-            
+            throw new Exception("Houve erro no webhook");
+        }
 
-            return null;
+        private async Task PreencherEventoAsync(DigitalSignatureEvents evento, DigitalSignatureResponse webhook, bool incluirSignatario = false)
+        {
+            evento.DataHoraAtual = webhook.DataHoraAtual;
+            evento.Evento = await DescribeEvent(webhook.IdEvento);
+
+            if (incluirSignatario && webhook.Signatarios?.Any() == true)
+            {
+                var signatario = webhook.Signatarios.First();
+                evento.Evento += $" - Nome: {signatario.Nome} - Email: {signatario.Email}";
+            }
+
+            evento.IdConta = webhook.IdConta;
+            evento.IdProcesso = webhook.IdProcesso;
+            evento.IdWebhook = webhook.IdWebhook;
+        }
+
+        private Task<string> ProcessStatus(int idEvento)
+        {
+            return Task.FromResult(idEvento switch
+            {
+                1 or 3 => "in_progress",
+                2 => "failed",
+                4 => "refused",
+                5 => "cancelled",
+                6 => "expired",
+                7 => "resent",
+                8 => "completed",
+                _ => "no_status"
+            });
+        }
+
+        private Task<string> DescribeEvent(int idEvento)
+        {
+            var description = idEvento switch
+            {
+                1 => "Processo Enviado",
+                2 => "Processo com falha de envio",
+                3 => "Processo assinado por algum signatário",
+                4 => "Processo recusado por algum signatário",
+                5 => "Processo cancelado pelo remetente",
+                6 => "Processo expirado",
+                7 => "Processo reenviado",
+                8 => "Processo assinado/concluído por todos os signatários",
+                _ => "Descrição do evento não encontrada"
+            };
+
+            return Task.FromResult(description);
         }
     }
-}
 
+}

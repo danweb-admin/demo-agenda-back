@@ -1,71 +1,52 @@
-﻿using System;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.IO;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
-using System.Linq;
-using NetDevPack.Messaging;
+using Solucao.Application.Service.Interfaces;
+using System;
+using Microsoft.AspNetCore.Http;
 
 namespace Solucao.API.Controllers
 {
     [Route("api/webhook")]
     public class WebhookController : ControllerBase
     {
-        private const string Secret = "KnhT1u/dmZEhU2CA0+Sm9bGLwo/k45vFxoxNWfydBES+hbc7buhE4du5iJoOAFYJo5oMgVyWBJ7EgaKFZg8EiQ==";
+        private readonly IDigitalSignatureService service;
+
+        public WebhookController(IDigitalSignatureService _service)
+        {
+            service = _service;
+        }
 
         [HttpPost]
         public async Task<IActionResult> Post()
         {
-            // Lê o corpo bruto da requisição
-            using var reader = new StreamReader(Request.Body);
-            var body = await reader.ReadToEndAsync();
-            Console.WriteLine(body);
 
-            // Pega o HMAC enviado no header
-            var signatureHeader = Request.Headers;
-
-            var receivedHmac = Request.Headers["HMAC"].ToString();
-
-            //if (string.IsNullOrEmpty(signatureHeader))
-            //{
-            //    return Unauthorized("Assinatura não encontrada");
-            //}
-
-            // Calcula o HMAC local
-            var computedSignature = GenerateHmac(body, Secret);
-
-            // 4. Comparar os valores
-            if (string.Equals(computedSignature, receivedHmac, StringComparison.OrdinalIgnoreCase))
+            try
             {
-                Console.WriteLine("Webhook autenticado com sucesso.");
-                Console.WriteLine("Payload recebido: " + body);
-                Console.WriteLine("X-Signature: " + signatureHeader);
+                // Lê o corpo bruto da requisição
+                using var reader = new StreamReader(Request.Body);
+                var body = await reader.ReadToEndAsync();
 
-                return Ok(new { message = "Webhook recebido e validado com sucesso!" });
+                // Pega o HMAC enviado no header
+                var signatureHeader = Request.Headers;
+
+                var receivedHmac = Request.Headers["HMAC"].ToString();
+
+                if (string.IsNullOrEmpty(receivedHmac))
+                    return Unauthorized("Assinatura não encontrada");
+
+                var result = await service.EventosWebhook(body);
+
+
+                return Ok(new { status = "Processo atualizado com sucesso." });
             }
-            else
+            catch (Exception ex)
             {
-                return Unauthorized(new { error = "HMAC inválido" });
-            }
-
-            
-
-
-            return Ok(new { status = "Recebido e autenticado" });
-        }
-
-        private string GenerateHmac(string payload, string secret)
-        {
-            var keyBytes = Encoding.UTF8.GetBytes(secret);
-            var messageBytes = Encoding.UTF8.GetBytes(payload);
-
-            using (var hmac = new HMACSHA256(keyBytes))
-            {
-                var hashBytes = hmac.ComputeHash(messageBytes);
-                return BitConverter.ToString(hashBytes).Replace("-", "").ToLower(); // Hexadecimal (sem hífen)
+                return StatusCode(StatusCodes.Status500InternalServerError, ex);
             }
         }
+
+        
     }
 }
 

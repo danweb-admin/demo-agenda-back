@@ -5,12 +5,13 @@ namespace Solucao.Application.Contracts.Response
 {
 	public class DigitalSignatureResponse
 	{
-		public Guid idProcesso { get; set; }
-		public string evento { get; set; }
-		public int idEvento { get; set; }
-		public Guid idConta { get; set; }
-		public Guid idWebhook { get; set; }
-		public DateTime dataHoraAtual { get; set; }
-		public ICollection<DigitalSignatureSignatarioResponse> signatarios { get; set; }
+		public Guid IdProcesso { get; set; }
+        public Guid idProcesso { get; set; }
+        public string Evento { get; set; }
+		public int IdEvento { get; set; }
+		public Guid IdConta { get; set; }
+		public Guid IdWebhook { get; set; }
+		public DateTime DataHoraAtual { get; set; }
+		public ICollection<DigitalSignatureSignatarioResponse> Signatarios { get; set; }
 	}
 }
