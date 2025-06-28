@@ -9,4 +9,4 @@ namespace: demo-danweb
 images:
 - name: williambr2022/demo-agenda-back
   newName: williambr2022/demo-agenda-back
-  newTag: 564cd54d776b32dd4b55cb8d4a1ec0625c798783
+  newTag: 8862ebd18a4f50d15322f75d32aff688e8605bba
