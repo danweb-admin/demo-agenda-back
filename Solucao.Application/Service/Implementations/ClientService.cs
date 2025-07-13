@@ -82,19 +82,20 @@ namespace Solucao.Application.Service.Implementations
 
             return new ClientViewModel
             {
-                ClientEquipment = await ReturnClientEquip()
+                ClientEquipment = await ReturnClientEquip(),
             };
             
         }
 
         public async Task<ValidationResult> Update(ClientViewModel client)
         {
-            client.UpdatedAt = DateTime.Now;
             var _client = mapper.Map<Client>(client);
 
-            await clientSpecificationRepository.RemoveAllByClient(_client.Id);
+            //await clientSpecificationRepository.RemoveAllByClient(_client.Id);
 
-            return await clientRepository.Update(_client);
+            //await assinaturaRepository.RemoveAllByClient(_client.Id);
+
+            return await clientRepository.Update(client);
         }
 
         public async Task<decimal> GetValueByEquipament(Guid clientId, Guid equipamentId, string startTime, string endTime)

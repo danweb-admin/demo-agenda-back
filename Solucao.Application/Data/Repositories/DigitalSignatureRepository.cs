@@ -6,6 +6,7 @@ using Solucao.Application.Data.Entities;
 using DocumentFormat.OpenXml.InkML;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace Solucao.Application.Data.Repositories
 {
@@ -56,6 +57,21 @@ namespace Solucao.Application.Data.Repositories
         {
             return await Db.DigitalSignatures
                         .FirstOrDefaultAsync(x => x.CalendarId == calendarId);
+        }
+
+        public async Task<IEnumerable<DigitalSignatureEvents>> GetHistoryByCalendarId(Guid calendarId)
+        {
+            return  await Db.DigitalSignatures                      
+                .Where(ds => ds.CalendarId == calendarId)                      
+                .Join(                                                          
+                    Db.DigitalSignatureEvents,                            
+                    ds => ds.IdProcesso,                                        
+                    dse => dse.IdProcesso,                                       
+                    (ds, dse) => dse)
+                .OrderBy(x => x.DataHoraAtual)
+                .ToListAsync();
+
+             
         }
 
         public async Task<DigitalSignature> GetById(Guid idProcesso)

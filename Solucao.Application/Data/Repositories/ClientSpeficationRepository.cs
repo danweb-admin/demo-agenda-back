@@ -31,7 +31,7 @@ namespace Solucao.Application.Data.Repositories
                     Db.Entry(item).State = EntityState.Deleted;
                 }
 
-                await Db.SaveChangesAsync();
+                
 
                 return ValidationResult.Success;
 

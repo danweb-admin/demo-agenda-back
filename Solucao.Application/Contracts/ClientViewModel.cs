@@ -51,11 +51,14 @@ namespace Solucao.Application.Contracts
         public object State { get; set; }
         public ICollection<ClientEquipmentViewModel> ClientEquipment { get; set; }
         public ICollection<ClientSpecificationViewModel> ClientSpecifications { get; set; }
+        public ICollection<ClientDigitalSignatureViewModel> ClientDigitalSignatures { get; set; }
+
 
         public ClientViewModel()
         {
             ClientEquipment = new List<ClientEquipmentViewModel>();
             ClientSpecifications = new List<ClientSpecificationViewModel>();
+            ClientDigitalSignatures = new List<ClientDigitalSignatureViewModel>();
         }
 
 

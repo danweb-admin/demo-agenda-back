@@ -10,6 +10,7 @@ namespace Solucao.Application.Service.Interfaces
 	public interface IDigitalSignatureService
 	{
         Task<ValidationResult> EnviarDocumentoParaAssinar(Guid CalendarId);
+        Task<IEnumerable<DigitalSignatureEventsViewModel>> HistoricoAssinatura(Guid CalendarId);
         Task<ValidationResult> EventosWebhook(string response);
 
     }

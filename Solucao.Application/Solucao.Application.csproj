@@ -36,6 +36,7 @@
     <None Remove="Utils\Enum\" />
     <None Remove="Migrations\" />
     <None Remove="Data\Results\" />
+    <None Remove="Exceptions\DigitalSignature\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Contracts\Response\" />
@@ -45,6 +46,7 @@
     <Folder Include="Utils\Enum\" />
     <Folder Include="Migrations\" />
     <Folder Include="Data\Results\" />
+    <Folder Include="Exceptions\DigitalSignature\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Migrations\20240510013801_AddedNewTableCalendarSpecificationConsumables.cs" />

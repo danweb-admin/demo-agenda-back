@@ -8,11 +8,13 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AutoMapper;
 using Solucao.Application.Contracts;
 using Solucao.Application.Contracts.Requests;
 using Solucao.Application.Contracts.Response;
 using Solucao.Application.Data.Entities;
 using Solucao.Application.Data.Repositories;
+using Solucao.Application.Exceptions.DigitalSignature;
 using Solucao.Application.Service.Interfaces;
 
 namespace Solucao.Application.Service.Implementations
@@ -23,13 +25,17 @@ namespace Solucao.Application.Service.Implementations
         private DigitalSignatureEventsRepository eventosRepository;
 
         private DigitalSignatureRepository assinaturaRepository;
+        private readonly IMapper mapper;
+
+
         private const string enviarDocumentosParaAssinar = "api/v2/processo/enviar-documento-para-assinar";
 
-        public DigitalSignatureService(CalendarRepository _calendarRepository, DigitalSignatureRepository _assinaturaRepository, DigitalSignatureEventsRepository _eventosRepository)
+        public DigitalSignatureService(CalendarRepository _calendarRepository, DigitalSignatureRepository _assinaturaRepository, DigitalSignatureEventsRepository _eventosRepository, IMapper _mapper)
         {
             calendarRepository = _calendarRepository;
             assinaturaRepository = _assinaturaRepository;
             eventosRepository = _eventosRepository;
+            mapper = _mapper;
         }
 
         public async Task<ValidationResult> EnviarDocumentoParaAssinar(Guid calendarId)
@@ -38,9 +44,15 @@ namespace Solucao.Application.Service.Implementations
             string appKey = Environment.GetEnvironmentVariable("AppKey");
             string subscriptionKey = Environment.GetEnvironmentVariable("SubscriptionKey");
 
+            if (string.IsNullOrEmpty(appKey))
+                throw new DigitalSignatureException("Você não tem permissão para enviar Assinatura Digital, contate o suporte.");
+
             var locacao = await calendarRepository.GetById(calendarId);
 
             var assinatura = await assinaturaRepository.GetByCalendarId(calendarId);
+
+            if (assinatura.Status == "in_progress")
+                throw new DigitalSignatureException("Contrato já enviado para Assinatura");
 
             var mensagemPadrao = new DigitalSignatureMensagemPadrao
             {
@@ -51,27 +63,33 @@ namespace Solucao.Application.Service.Implementations
             var destinatarios = new List<DigitalSignatureDestinatario>();
             int contador = 0;
 
+            if (locacao.Client.ClientDigitalSignatures.Count() == 0)
+                throw new DigitalSignatureException("Signatário não configurado, verifique cadastro do cliente");
+
             foreach (var dest in locacao.Client.ClientDigitalSignatures)
             {
-                var destinatario = new DigitalSignatureDestinatario
+                
+                var destinatario = new DigitalSignatureDestinatario();
+
+                destinatario.IdTipoAcao = 1;
+                destinatario.OrdemAssinatura = contador;
+                destinatario.Nome = dest.Name;
+                destinatario.Email = dest.Email;
+                var assinarOnline = new DigitalSignatureAssinarOnline();
+                assinarOnline.AssinarComo = 1;
+                if (dest.IsPF)
+                    assinarOnline.PapelPessoaFisica = new List<string> { dest.PartyName };
+                else
+                    assinarOnline.PapelPessoaJuridica = new List<string> { dest.PartyName };
+                assinarOnline.IdTipoAssinatura = 1;
+                var assinaturaEletronica = new DigitalSignatureAssinaturaEletronica
                 {
-                    IdTipoAcao = 1,
-                    OrdemAssinatura = contador,
-                    Nome = dest.Name,
-                    Email = dest.Email,
-                    AssinarOnline = new DigitalSignatureAssinarOnline
-                    {
-                        AssinarComo = 1,
-                        PapelPessoaFisica = new List<string> { dest.PartyName },
-                        IdTipoAssinatura = 1,
-                        AssinaturaEletronica = new DigitalSignatureAssinaturaEletronica
-                        {
-                            ObrigarSignatarioInformarNome = true,
-                            ObrigarSignatarioInformarNumeroDocumento = true,
-                            TipoDocumentoAInformar = 1
-                        }
-                    }
+                    ObrigarSignatarioInformarNome = true,
+                    ObrigarSignatarioInformarNumeroDocumento = true,
+                    TipoDocumentoAInformar = 1
                 };
+                assinarOnline.AssinaturaEletronica = assinaturaEletronica;
+                destinatario.AssinarOnline = assinarOnline;
                 destinatarios.Add(destinatario);
                 contador++;
 
@@ -117,13 +135,14 @@ namespace Solucao.Application.Service.Implementations
             var response = await client.PostAsync(url, content);
 
             if (!response.IsSuccessStatusCode)
-                throw new Exception("Houve erro na assinatura do documento");
+                throw new DigitalSignatureException("Houve erro na assinatura do documento");
 
             string result = await response.Content.ReadAsStringAsync();
 
             var resposta = JsonSerializer.Deserialize<DigitalSignatureResponse>(result);
 
             assinatura.IdProcesso = resposta.IdProcesso;
+            assinatura.Status = "in_progress";
 
             await assinaturaRepository.Update(assinatura);
 
@@ -151,7 +170,13 @@ namespace Solucao.Application.Service.Implementations
                 return ValidationResult.Success;
             }
 
-            throw new Exception("Houve erro no webhook");
+            throw new DigitalSignatureException("Houve erro no webhook");
+        }
+
+        public async Task<IEnumerable<DigitalSignatureEventsViewModel>> HistoricoAssinatura(Guid CalendarId)
+        {
+            return mapper.Map<IEnumerable<DigitalSignatureEventsViewModel>>(await assinaturaRepository.GetHistoryByCalendarId(CalendarId));
+           
         }
 
         private async Task PreencherEventoAsync(DigitalSignatureEvents evento, DigitalSignatureResponse webhook, bool incluirSignatario = false)
@@ -202,6 +227,8 @@ namespace Solucao.Application.Service.Implementations
 
             return Task.FromResult(description);
         }
+
+        
     }
 
 }

@@ -40,8 +40,10 @@ namespace Solucao.Application.AutoMapper
 
             CreateMap<ClientSpecification, ClientSpecificationViewModel>();
 
+            CreateMap<ClientDigitalSignature, ClientDigitalSignatureViewModel>();
 
 
+            CreateMap<DigitalSignatureEvents, DigitalSignatureEventsViewModel>();
 
 
         }

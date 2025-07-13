@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using NetDevPack.Data;
@@ -32,6 +33,29 @@ namespace Solucao.Application.Data.Repositories
             {
                 throw new Exception(e.InnerException.Message);
             }
+        }
+
+        public virtual async Task<ValidationResult> RemoveAllByClient(Guid clientId)
+        {
+            try
+            {
+                var clientDigitalSignatures = await Db.ClientDigitalSignatures.Where(x => x.ClientId == clientId).ToListAsync();
+
+                foreach (var item in clientDigitalSignatures)
+                {
+                    Db.Entry(item).State = EntityState.Deleted;
+                }
+
+                
+
+                return ValidationResult.Success;
+
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.InnerException.Message);
+            }
+
         }
     }
 }
