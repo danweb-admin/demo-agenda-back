@@ -110,7 +110,7 @@ namespace Solucao.API.Controllers
             }
             
             var user = await userService.GetByName(User.Identity.Name);
-
+            Console.WriteLine("User.Identity.Name " + User.Identity.Name);
             Console.WriteLine("user" + user);
             Console.WriteLine("model" + model);
 
