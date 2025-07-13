@@ -32,8 +32,8 @@ namespace Solucao.API.Controllers
 
                 var receivedHmac = Request.Headers["HMAC"].ToString();
 
-                if (string.IsNullOrEmpty(receivedHmac))
-                    return Unauthorized("Assinatura não encontrada");
+                //if (string.IsNullOrEmpty(receivedHmac))
+                //    return Unauthorized("Assinatura não encontrada");
 
                 var result = await service.EventosWebhook(body);
 
