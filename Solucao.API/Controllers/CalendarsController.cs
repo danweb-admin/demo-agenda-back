@@ -111,6 +111,9 @@ namespace Solucao.API.Controllers
             
             var user = await userService.GetByName(User.Identity.Name);
 
+            Console.WriteLine("user" + user);
+            Console.WriteLine("model" + model);
+
             result = await calendarService.Add(model, user.Id);
 
             if (result != null)
