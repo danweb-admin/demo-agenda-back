@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Newtonsoft.Json;
 using Solucao.Application.Contracts;
 using Solucao.Application.Contracts.Requests;
@@ -139,7 +140,7 @@ namespace Solucao.Application.Service.Implementations
 
             string result = await response.Content.ReadAsStringAsync();
 
-            var resposta = System.Text.Json.JsonSerializer.Deserialize<DigitalSignatureResponse>(result);
+            var resposta = JsonConvert.DeserializeObject<DigitalSignatureResponse>(result);
 
             assinatura.IdProcesso = resposta.IdProcesso;
             assinatura.Status = "in_progress";
@@ -165,7 +166,7 @@ namespace Solucao.Application.Service.Implementations
                 await PreencherEventoAsync(evento, webhookResponse, incluirSignatario: isEventoComSignatario);
                 await eventosRepository.Add(evento);
 
-                processo.Status = await ProcessStatus(idEvento);
+                processo.Status = ProcessStatus(idEvento);
                 await assinaturaRepository.Update(processo);
 
                 return ValidationResult.Success;
@@ -182,8 +183,13 @@ namespace Solucao.Application.Service.Implementations
 
         private async Task PreencherEventoAsync(DigitalSignatureEvents evento, DigitalSignatureResponse webhook, bool incluirSignatario = false)
         {
+            // Converte a string ISO 8601 para DateTime
+            DateTime dataConvertida = DateTime.Parse(webhook.DataHoraAtual);
 
-            evento.DataHoraAtual = DateTime.ParseExact(webhook.DataHoraAtual, "dd/MM/yyyy HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+            // Converte para horário local (opcional, se estiver em UTC)
+            DateTime dataBrasileira = dataConvertida.ToLocalTime();
+
+            evento.DataHoraAtual = dataBrasileira;
             evento.Evento = await DescribeEvent(webhook.IdEvento);
 
             if (incluirSignatario && webhook.Signatarios?.Any() == true)
@@ -196,9 +202,9 @@ namespace Solucao.Application.Service.Implementations
             evento.IdProcesso = webhook.IdProcesso;
         }
 
-        private Task<string> ProcessStatus(int idEvento)
+        private string ProcessStatus(int idEvento)
         {
-            return Task.FromResult(idEvento switch
+            return idEvento switch
             {
                 1 or 3 => "in_progress",
                 2 => "failed",
@@ -208,7 +214,7 @@ namespace Solucao.Application.Service.Implementations
                 7 => "resent",
                 8 => "completed",
                 _ => "no_status"
-            });
+            };
         }
 
         private Task<string> DescribeEvent(int idEvento)
