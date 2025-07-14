@@ -38,7 +38,7 @@ namespace Solucao.API.Controllers
                 //if (string.IsNullOrEmpty(receivedHmac))
                 //    return Unauthorized("Assinatura não encontrada");
 
-                //var result = await service.EventosWebhook(body);
+                var result = await service.EventosWebhook(body);
 
 
                 return Ok(new { status = "Processo atualizado com sucesso." });

@@ -183,8 +183,8 @@ namespace Solucao.Application.Service.Implementations
         private async Task PreencherEventoAsync(DigitalSignatureEvents evento, DigitalSignatureResponse webhook, bool incluirSignatario = false)
         {
 
-            evento.DataHoraAtual = webhook.DataHoraAtual;
-            evento.Evento = await DescribeEvent(webhook.idEvento);
+            evento.DataHoraAtual = DateTime.ParseExact(webhook.DataHoraAtual, "dd/MM/yyyy HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+            evento.Evento = await DescribeEvent(webhook.IdEvento);
 
             if (incluirSignatario && webhook.Signatarios?.Any() == true)
             {

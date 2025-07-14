@@ -5,8 +5,6 @@ namespace Solucao.Application.Contracts.Response
 	{
 		public string Nome { get; set; }
 		public string Email { get; set; }
-        public string nome { get; set; }
-        public string email { get; set; }
     }
 }
 
