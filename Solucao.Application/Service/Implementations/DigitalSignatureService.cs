@@ -6,9 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using AutoMapper;
+using Newtonsoft.Json;
 using Solucao.Application.Contracts;
 using Solucao.Application.Contracts.Requests;
 using Solucao.Application.Contracts.Response;
@@ -120,7 +120,7 @@ namespace Solucao.Application.Service.Implementations
                 Documentos = documentos
             };
 
-            string json = JsonSerializer.Serialize(envioAssinatura);
+            string json = JsonConvert.SerializeObject(envioAssinatura);
 
             string url = $"{apiRest}{enviarDocumentosParaAssinar}";
 
@@ -139,7 +139,7 @@ namespace Solucao.Application.Service.Implementations
 
             string result = await response.Content.ReadAsStringAsync();
 
-            var resposta = JsonSerializer.Deserialize<DigitalSignatureResponse>(result);
+            var resposta = JsonConvert.DeserializeObject<DigitalSignatureResponse>(result);
 
             assinatura.IdProcesso = resposta.IdProcesso;
             assinatura.Status = "in_progress";
@@ -151,7 +151,8 @@ namespace Solucao.Application.Service.Implementations
 
         public async Task<ValidationResult> EventosWebhook(string response)
         {
-            var webhookResponse = JsonSerializer.Deserialize<DigitalSignatureResponse>(response);
+
+            var webhookResponse = JsonConvert.DeserializeObject<DigitalSignatureResponse>(response);
             var processo = await assinaturaRepository.GetById(webhookResponse.IdProcesso);
             DigitalSignatureEvents evento = new DigitalSignatureEvents();
 
@@ -181,8 +182,9 @@ namespace Solucao.Application.Service.Implementations
 
         private async Task PreencherEventoAsync(DigitalSignatureEvents evento, DigitalSignatureResponse webhook, bool incluirSignatario = false)
         {
+
             evento.DataHoraAtual = webhook.DataHoraAtual;
-            evento.Evento = await DescribeEvent(webhook.IdEvento);
+            evento.Evento = await DescribeEvent(webhook.idEvento);
 
             if (incluirSignatario && webhook.Signatarios?.Any() == true)
             {
@@ -190,9 +192,8 @@ namespace Solucao.Application.Service.Implementations
                 evento.Evento += $" - Nome: {signatario.Nome} - Email: {signatario.Email}";
             }
 
-            evento.IdConta = webhook.IdConta;
+            
             evento.IdProcesso = webhook.IdProcesso;
-            evento.IdWebhook = webhook.IdWebhook;
         }
 
         private Task<string> ProcessStatus(int idEvento)

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Solucao.Application.Service.Interfaces;
 using System;
 using Microsoft.AspNetCore.Http;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace Solucao.API.Controllers
 {
@@ -32,16 +33,19 @@ namespace Solucao.API.Controllers
 
                 var receivedHmac = Request.Headers["HMAC"].ToString();
 
+                Console.WriteLine(body);
+
                 //if (string.IsNullOrEmpty(receivedHmac))
                 //    return Unauthorized("Assinatura não encontrada");
 
-                var result = await service.EventosWebhook(body);
+                //var result = await service.EventosWebhook(body);
 
 
                 return Ok(new { status = "Processo atualizado com sucesso." });
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 return StatusCode(StatusCodes.Status500InternalServerError, ex);
             }
         }
