@@ -120,7 +120,7 @@ namespace Solucao.Application.Service.Implementations
                 Documentos = documentos
             };
 
-            string json = JsonConvert.SerializeObject(envioAssinatura);
+            string json = System.Text.Json.JsonSerializer.Serialize(envioAssinatura);
 
             string url = $"{apiRest}{enviarDocumentosParaAssinar}";
 
@@ -139,7 +139,7 @@ namespace Solucao.Application.Service.Implementations
 
             string result = await response.Content.ReadAsStringAsync();
 
-            var resposta = JsonConvert.DeserializeObject<DigitalSignatureResponse>(result);
+            var resposta = System.Text.Json.JsonSerializer.Deserialize<DigitalSignatureResponse>(result);
 
             assinatura.IdProcesso = resposta.IdProcesso;
             assinatura.Status = "in_progress";
