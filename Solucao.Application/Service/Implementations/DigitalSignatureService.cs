@@ -62,10 +62,12 @@ namespace Solucao.Application.Service.Implementations
             };
 
             var destinatarios = new List<DigitalSignatureDestinatario>();
-            int contador = 0;
+            int contador = 1;
 
             if (locacao.Client.ClientDigitalSignatures.Count() == 0)
                 throw new DigitalSignatureException("Signatário não configurado, verifique cadastro do cliente");
+
+            AddLocador(ref destinatarios);
 
             foreach (var dest in locacao.Client.ClientDigitalSignatures)
             {
@@ -136,7 +138,11 @@ namespace Solucao.Application.Service.Implementations
             var response = await client.PostAsync(url, content);
 
             if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine("response: " + await response.Content.ReadAsStringAsync());
                 throw new DigitalSignatureException("Houve erro na assinatura do documento");
+            }
+                
 
             string result = await response.Content.ReadAsStringAsync();
 
@@ -179,6 +185,40 @@ namespace Solucao.Application.Service.Implementations
         {
             return mapper.Map<IEnumerable<DigitalSignatureEventsViewModel>>(await assinaturaRepository.GetHistoryByCalendarId(CalendarId));
            
+        }
+
+        private void AddLocador(ref List<DigitalSignatureDestinatario> destinatarios)
+        {
+            string locadorName = Environment.GetEnvironmentVariable("LocadorName");
+            string locadorEmail = Environment.GetEnvironmentVariable("LocadorEmail");
+
+            if (string.IsNullOrEmpty(locadorName))
+                throw new DigitalSignatureException("Nome do Locador não configurado.");
+
+            if (string.IsNullOrEmpty(locadorEmail))
+                throw new DigitalSignatureException("Email do Locador não configurado.");
+
+            var destinatario = new DigitalSignatureDestinatario();
+
+            destinatario.IdTipoAcao = 1;
+            destinatario.OrdemAssinatura = 0;
+            destinatario.Nome = locadorName;
+            destinatario.Email = locadorEmail;
+            var assinarOnline = new DigitalSignatureAssinarOnline();
+            assinarOnline.AssinarComo = 1;
+            assinarOnline.PapelPessoaJuridica = new List<string> { "Locador"};
+            assinarOnline.IdTipoAssinatura = 1;
+            var assinaturaEletronica = new DigitalSignatureAssinaturaEletronica
+            {
+                ObrigarSignatarioInformarNome = true,
+                ObrigarSignatarioInformarNumeroDocumento = true,
+                TipoDocumentoAInformar = 1
+            };
+            assinarOnline.AssinaturaEletronica = assinaturaEletronica;
+            destinatario.AssinarOnline = assinarOnline;
+            destinatarios.Add(destinatario);
+
+
         }
 
         private async Task PreencherEventoAsync(DigitalSignatureEvents evento, DigitalSignatureResponse webhook, bool incluirSignatario = false)

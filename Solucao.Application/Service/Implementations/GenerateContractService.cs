@@ -66,6 +66,7 @@ namespace Solucao.Application.Service.Implementations
         {
             var modelPath = Environment.GetEnvironmentVariable("ModelDocsPath");
             var contractPath = Environment.GetEnvironmentVariable("DocsPath");
+            var useList = Environment.GetEnvironmentVariable("UseList");
 
             var calendar = mapper.Map<CalendarViewModel>(await calendarRepository.GetById(request.CalendarId));
             calendar.RentalTime = CalculateMinutes(calendar.StartTime.Value, calendar.EndTime.Value);
@@ -97,7 +98,8 @@ namespace Solucao.Application.Service.Implementations
 
                 await calendarRepository.Update(mapper.Map<Calendar>(calendar));
 
-                await AddDigitalSignature(calendar.Id.Value, contractFileName);
+                if (useList == "S")
+                    await AddDigitalSignature(calendar.Id.Value, contractFileName);
 
                 return ValidationResult.Success;
             }
@@ -259,6 +261,11 @@ namespace Solucao.Application.Service.Implementations
 
         private async Task SearchCustomerValue(CalendarViewModel calendar)
         {
+            var useList = Environment.GetEnvironmentVariable("UseList");
+
+            if (useList == "N")
+                return;
+
             TimeSpan difference = calendar.EndTime.Value - calendar.StartTime.Value;
             var rentalTime = difference.TotalHours;
 
