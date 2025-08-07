@@ -197,5 +197,13 @@ namespace Solucao.API.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost("calendar/bulk-scheduling")]
+        public async Task<IActionResult> BulkSchedulingAsync([FromBody] BulkSchedulingRequest model)
+        {
+            var user = await userService.GetByName(User.Identity.Name);
+
+            return Ok(await calendarService.BulkScheduling(model, user.Id));
+        }
     }
 }
