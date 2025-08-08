@@ -9,7 +9,7 @@ namespace Solucao.API.Controllers
 {
     [Route("api/v1/model-configuration")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class ModelConfigurationController : ControllerBase
 	{
         private readonly IModelConfigurationService service;

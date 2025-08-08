@@ -19,7 +19,7 @@ namespace Solucao.API.Controllers
 {
     [Route("api/v1")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class ClientsController : ControllerBase
     {
         private readonly IClientService clientService;

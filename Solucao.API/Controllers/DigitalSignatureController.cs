@@ -15,7 +15,7 @@ namespace Solucao.API.Controllers
 {
     [Route("api/v1/assinatura-digital")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class DigitalSignatureController : ControllerBase
     {
         private readonly IDigitalSignatureService service;
