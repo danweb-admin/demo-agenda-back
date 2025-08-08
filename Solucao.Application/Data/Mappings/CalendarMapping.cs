@@ -95,6 +95,15 @@ namespace Solucao.Application.Data.Mappings
 
             builder.Property(c => c.FileNamePdf).
                 HasColumnType("varchar(150)");
+
+            builder.Property(c => c.Others).
+                HasColumnType("decimal(18,2)");
+
+            builder.Property(c => c.PaymentMethods).
+                HasColumnType("varchar(20)");
+
+            builder.Property(c => c.PaymentStatus).
+                HasColumnType("varchar(20)");
         }
     }
 }

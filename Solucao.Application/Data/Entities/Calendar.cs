@@ -32,6 +32,9 @@ namespace Solucao.Application.Data.Entities
         public decimal TotalValue { get; set; }
         public decimal Discount { get; set; }
         public decimal Freight { get; set; }
+        public decimal Others { get; set; }
+        public string PaymentStatus { get; set; }
+        public string PaymentMethods { get; set; }
         public int RentalTime { get; set; }
         public string ContractPath { get; set; }
         public string FileNameDocx { get; set; }

@@ -24,7 +24,6 @@ namespace Solucao.Application.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-
         }
 
         public DbSet<User> Users { get; set; }
