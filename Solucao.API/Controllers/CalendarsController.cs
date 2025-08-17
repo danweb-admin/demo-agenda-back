@@ -205,5 +205,12 @@ namespace Solucao.API.Controllers
 
             return Ok(await calendarService.BulkScheduling(model, user.Id));
         }
+
+        [HttpGet("calendar/report")]
+        public async Task<IActionResult> CalendarReport([FromQuery] CalendarReportRequest model)
+        {
+            
+            return Ok(await calendarService.CalendarReport(model));
+        }
     }
 }

@@ -119,5 +119,7 @@ namespace Solucao.Application.Service.Implementations
         {
             return mapper.Map<UserViewModel>(await userRepository.GetByEmail(email));
         }
+
+        
     }
 }

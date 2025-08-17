@@ -26,6 +26,7 @@ namespace Solucao.Application.Service.Interfaces
         Task<string> Availability(List<Guid> equipamentIds, int month, int year);
         Task<List<BulkSchedulingResponse>> BulkScheduling(BulkSchedulingRequest request, Guid user);
         Task<List<string>> SchedulingIntegration(DateTime startDate, Guid? user);
+        Task<IEnumerable<CalendarReportResponse>> CalendarReport(CalendarReportRequest model);
 
     }
 }

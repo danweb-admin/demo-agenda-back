@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Solucao.Application.Data.Entities;
 using Solucao.Application.Data.Mappings;
 using NetDevPack.Data;
+using Solucao.Application.Contracts.Response;
 
 namespace Solucao.Application.Data
 {
@@ -54,6 +55,8 @@ namespace Solucao.Application.Data
         public DbSet<DigitalSignature> DigitalSignatures { get; set; }
         public DbSet<DigitalSignatureEvents> DigitalSignatureEvents { get; set; }
         public DbSet<ClientDigitalSignature> ClientDigitalSignatures { get; set; }
+
+        public DbSet<CalendarReportResponse> CalendarReports { get; set; }
 
 
 
@@ -189,6 +192,8 @@ namespace Solucao.Application.Data
             modelBuilder.Entity<ClientSpecification>()
                 .HasOne(x => x.Client)
                 .WithMany(x => x.ClientSpecifications);
+
+            modelBuilder.Entity<CalendarReportResponse>().HasNoKey();
 
 
             base.OnModelCreating(modelBuilder);

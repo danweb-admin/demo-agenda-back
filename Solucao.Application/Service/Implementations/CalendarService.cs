@@ -490,6 +490,8 @@ namespace Solucao.Application.Service.Implementations
             return responses;
         }
 
+
+
         public async Task<List<string>>  SchedulingIntegration(DateTime startDate, Guid? user)
         {
             //var url = Environment.GetEnvironmentVariable("CalendarURL");
@@ -517,6 +519,11 @@ namespace Solucao.Application.Service.Implementations
 
             //return null;
             throw new NotImplementedException();
+        }
+
+        public async Task<IEnumerable<CalendarReportResponse>> CalendarReport(CalendarReportRequest model)
+        {
+            return await calendarRepository.CalendarReport(model.DataInicial, model.DataFinal, model.ClientId,model.EquipmentId,model.Status);
         }
     }
 }

@@ -1,14 +1,11 @@
-﻿using DocumentFormat.OpenXml.InkML;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using NetDevPack.Data;
 using Solucao.Application.Contracts.Response;
 using Solucao.Application.Data.Entities;
-using Solucao.Application.Data.Results;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Solucao.Application.Data.Repositories
@@ -25,9 +22,6 @@ namespace Solucao.Application.Data.Repositories
             Db = _context;
             DbSet = Db.Set<Calendar>();
         }
-
-
-        
 
         public async Task<IEnumerable<Calendar>> GetAll(DateTime date)
         {
@@ -239,10 +233,6 @@ namespace Solucao.Application.Data.Repositories
 
         }
 
-        
-
-
-
         public async Task<IEnumerable<Calendar>> Availability(List<Guid> equipamentIds, int month, int year)
         {
             var _notIn = new List<string> { "3", "4" };
@@ -262,6 +252,42 @@ namespace Solucao.Application.Data.Repositories
             {
                 throw;
             }
+        }
+
+        public async Task<IEnumerable<CalendarReportResponse>> CalendarReport(DateTime dataIncial, DateTime dataFinal, Guid? clientId, Guid? equipmentId, string status)
+        {
+            var sql = "select " +
+                        "c.DATE as Date," +
+                        "cli.Name as ClientName," +
+                        "e.Name as EquipmentName," +
+                        "c.Discount," +
+                        "c.Freight," +
+                        "c.Others," +
+                        "c.[Value]," +
+                        "c.TotalValue," +
+                        "case when c.paymentStatus = 'pending' then 'Pendente'" +
+                        "     when c.paymentStatus = 'paid' then 'Pago'" +
+                        "     else  '' end as PaymentStatus," +
+                        "c.paymentMethods as PaymentMethods," +
+                        "case when c.STATUS = 1 then 'Confirmada'" +
+                        "     when c.STATUS = 2 then 'Pendente'" +
+                        "     when c.STATUS = 3 then 'Cancelada'" +
+                        "     when c.STATUS = 4 then 'Excluída'" +
+                        "     else  'Pré-Agendada'" +
+                        "     end as Status " +
+                        "from calendars as c " +
+                        "inner join Clients as cli on c.ClientId = cli.Id " +
+                        "inner join Equipaments as e on c.EquipamentId = e.Id " +
+                        "where " +
+                        $@"[Date] BETWEEN '{dataIncial.ToString("yyyy-MM-dd")}' and '{dataFinal.ToString("yyyy-MM-dd")}' AND " +
+                        "c.Active = 1 and " +
+                        "(c.ClientId = " + (clientId.HasValue ? $"'{clientId.Value}'" : "null" ) + " or " + (clientId.HasValue ? $"'{clientId.Value}'" : "null" ) +  " is null) and " +
+                        $@"(c.EquipamentId = " + (equipmentId.HasValue ? $"'{equipmentId.Value}'" : "null") + " or " + (equipmentId.HasValue ? $"'{equipmentId.Value}'" : "null" ) +  " is null) AND " +
+                        $@"(c.[Status] = {(string.IsNullOrEmpty(status) ? "''" : $"'{status}'")} or {(string.IsNullOrEmpty(status) ? "''" : $"'{status}'")} = '') " +
+                        "order by " +
+                        "c.[Date], cli.Name";
+
+            return await Db.CalendarReports.FromSqlRaw(sql).ToListAsync();
         }
 
         private string In(List<Guid> list)
