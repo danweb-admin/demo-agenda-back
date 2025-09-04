@@ -27,6 +27,8 @@ namespace Solucao.Application.Service.Interfaces
         Task<List<BulkSchedulingResponse>> BulkScheduling(BulkSchedulingRequest request, Guid user);
         Task<List<string>> SchedulingIntegration(DateTime startDate, Guid? user);
         Task<IEnumerable<CalendarReportResponse>> CalendarReport(CalendarReportRequest model);
+        Task<IEnumerable<CalendarViewResponse>> CalendarView(DateTime startDate, DateTime endDate);
+
 
     }
 }

@@ -290,6 +290,34 @@ namespace Solucao.Application.Data.Repositories
             return await Db.CalendarReports.FromSqlRaw(sql).ToListAsync();
         }
 
+        public async Task<IEnumerable<CalendarViewResponse>> CalendarView(DateTime startDate, DateTime endDate)
+        {
+            var sql = "select " +
+                        "starttime as start," +
+                        "endtime as 'end'," +
+                        "e.name + ' - ' + convert(varchar(15),cli.Name)  as title, " +
+                        "e.name as EquipamentoFull, " +
+                        "cli.Name + ' - ' + CONVERT(varchar(15),ci.Nome) + ' - ' + s.Sigla as ClienteFull, " +
+                        "c.status, " +
+                        "p1.Name as MotoristaRecolhe, " +
+                        "p.Name as MotoristaEntrega, " +
+                        "e.Color " +
+                    "from Calendars as c " +
+                    "inner join Equipaments as e on c.EquipamentId = e.id " +
+                    "inner join Clients as cli on c.ClientId = cli.Id " +
+                    "inner join Cities as ci on cli.CityId = ci.Id " +
+                    "inner join States as s on ci.StateId = s.Id " +
+                    "left join People as p on c.DriverId = p.Id " +
+                    "left join People as p1 on c.DriverCollectsId = p1.Id " +
+                    "where " +
+                    "c.Active = 1 AND " +
+                    "c.status in (1,2) AND " +
+                    $@"[Date] BETWEEN '{startDate.ToString("yyyy-MM-dd")}' and '{endDate.ToString("yyyy-MM-dd")}'   " +
+                    "order by [date]";
+
+            return await Db.CalendarViewResponses.FromSqlRaw(sql).ToListAsync();
+        }
+
         private string In(List<Guid> list)
         {
             var join = new List<string>();

@@ -35,6 +35,11 @@ namespace Solucao.Application.Data.Mappings
             builder.Property(c => c.Order)
                 .HasColumnType("int")
                 .IsRequired();
+
+            builder.Property(c => c.Color)
+                .HasColumnType("varchar(7)");
+
+
         }
     }
 }

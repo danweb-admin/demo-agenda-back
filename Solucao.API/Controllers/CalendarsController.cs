@@ -212,5 +212,13 @@ namespace Solucao.API.Controllers
             
             return Ok(await calendarService.CalendarReport(model));
         }
+
+        [HttpGet("calendar/view")]
+        [AllowAnonymous]
+        public async Task<IActionResult> CalendarView([FromQuery] DateTime startDate, DateTime endDate)
+        {
+
+            return Ok(await calendarService.CalendarView(startDate,endDate));
+        }
     }
 }

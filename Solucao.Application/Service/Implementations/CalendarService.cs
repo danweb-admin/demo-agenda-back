@@ -525,5 +525,12 @@ namespace Solucao.Application.Service.Implementations
         {
             return await calendarRepository.CalendarReport(model.DataInicial, model.DataFinal, model.ClientId,model.EquipmentId,model.Status);
         }
+
+        
+
+        public async Task<IEnumerable<CalendarViewResponse>> CalendarView(DateTime startDate, DateTime endDate)
+        {
+            return await calendarRepository.CalendarView(startDate,endDate);
+        }
     }
 }

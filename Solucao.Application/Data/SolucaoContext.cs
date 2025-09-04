@@ -57,6 +57,7 @@ namespace Solucao.Application.Data
         public DbSet<ClientDigitalSignature> ClientDigitalSignatures { get; set; }
 
         public DbSet<CalendarReportResponse> CalendarReports { get; set; }
+        public DbSet<CalendarViewResponse> CalendarViewResponses { get; set; }
 
 
 
@@ -194,6 +195,8 @@ namespace Solucao.Application.Data
                 .WithMany(x => x.ClientSpecifications);
 
             modelBuilder.Entity<CalendarReportResponse>().HasNoKey();
+
+            modelBuilder.Entity<CalendarViewResponse>().HasNoKey();
 
 
             base.OnModelCreating(modelBuilder);
