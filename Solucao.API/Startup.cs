@@ -34,7 +34,7 @@ namespace Solucao.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors();
+            //services.AddCors();
 
             services.Configure<FormOptions>(o =>
             {
@@ -142,10 +142,10 @@ namespace Solucao.API
             //app.UseCors(
             //    options => options.WithOrigins("http://solucao-laser-dev.s3-website-us-east-1.amazonaws.com").AllowAnyMethod().AllowAnyHeader().AllowAnyOrigin()
             //);
-            app.UseCors(builder => builder
-                    .AllowAnyOrigin()
-                    .AllowAnyMethod()
-                    .AllowAnyHeader());
+            //app.UseCors(builder => builder
+            //        .AllowAnyOrigin()
+            //        .AllowAnyMethod()
+            //        .AllowAnyHeader());
             
 
 
