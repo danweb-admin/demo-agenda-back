@@ -27,7 +27,7 @@ namespace Solucao.Application.Service.Implementations
 
         private DigitalSignatureRepository assinaturaRepository;
         private readonly IMapper mapper;
-
+        private const string prefixoFone = "+55";
 
         private const string enviarDocumentosParaAssinar = "api/v2/processo/enviar-documento-para-assinar";
 
@@ -68,35 +68,30 @@ namespace Solucao.Application.Service.Implementations
                 throw new DigitalSignatureException("Signatário não configurado, verifique cadastro do cliente");
 
             AddLocador(ref destinatarios);
-
-            foreach (var dest in locacao.Client.ClientDigitalSignatures)
-            {
                 
-                var destinatario = new DigitalSignatureDestinatario();
+            var destinatario = new DigitalSignatureDestinatario();
 
-                destinatario.IdTipoAcao = 1;
-                destinatario.OrdemAssinatura = contador;
-                destinatario.Nome = dest.Name;
-                destinatario.Email = dest.Email;
-                var assinarOnline = new DigitalSignatureAssinarOnline();
-                assinarOnline.AssinarComo = 1;
-                if (dest.IsPF)
-                    assinarOnline.PapelPessoaFisica = new List<string> { dest.PartyName };
-                else
-                    assinarOnline.PapelPessoaJuridica = new List<string> { dest.PartyName };
-                assinarOnline.IdTipoAssinatura = 1;
-                var assinaturaEletronica = new DigitalSignatureAssinaturaEletronica
-                {
-                    ObrigarSignatarioInformarNome = true,
-                    ObrigarSignatarioInformarNumeroDocumento = true,
-                    TipoDocumentoAInformar = 1
-                };
-                assinarOnline.AssinaturaEletronica = assinaturaEletronica;
-                destinatario.AssinarOnline = assinarOnline;
-                destinatarios.Add(destinatario);
-                contador++;
-
-            }
+            destinatario.IdTipoAcao = 1;
+            destinatario.OrdemAssinatura = contador;
+            destinatario.Nome = locacao.Client.Name;
+            destinatario.Telefone = prefixoFone + locacao.Client.CellPhone;
+            var assinarOnline = new DigitalSignatureAssinarOnline();
+            assinarOnline.AssinarComo = 1;
+            //if (dest.IsPF)
+                assinarOnline.PapelPessoaFisica = new List<string> { "Locatário" };
+            //else
+            //    assinarOnline.PapelPessoaJuridica = new List<string> { dest.PartyName };
+            assinarOnline.IdTipoAssinatura = 1;
+            var assinaturaEletronica = new DigitalSignatureAssinaturaEletronica
+            {
+                ObrigarSignatarioInformarNome = true,
+                ObrigarSignatarioInformarNumeroDocumento = true,
+                TipoDocumentoAInformar = 1
+            };
+            assinarOnline.AssinaturaEletronica = assinaturaEletronica;
+            destinatario.AssinarOnline = assinarOnline;
+            destinatarios.Add(destinatario);
+            contador++;
 
             var documentos = new List<DigitalSignatureDocumento>();
 
@@ -143,7 +138,6 @@ namespace Solucao.Application.Service.Implementations
                 throw new DigitalSignatureException("Houve erro na assinatura do documento");
             }
                 
-
             string result = await response.Content.ReadAsStringAsync();
 
             var resposta = JsonConvert.DeserializeObject<DigitalSignatureResponse>(result);
@@ -190,20 +184,22 @@ namespace Solucao.Application.Service.Implementations
         private void AddLocador(ref List<DigitalSignatureDestinatario> destinatarios)
         {
             string locadorName = Environment.GetEnvironmentVariable("LocadorName");
-            string locadorEmail = Environment.GetEnvironmentVariable("LocadorEmail");
+            //string locadorEmail = Environment.GetEnvironmentVariable("LocadorEmail");
+            string locadorTelefone = Environment.GetEnvironmentVariable("LocadorPhone");
+
 
             if (string.IsNullOrEmpty(locadorName))
                 throw new DigitalSignatureException("Nome do Locador não configurado.");
 
-            if (string.IsNullOrEmpty(locadorEmail))
-                throw new DigitalSignatureException("Email do Locador não configurado.");
+            if (string.IsNullOrEmpty(locadorTelefone))
+                throw new DigitalSignatureException("Telefone do Locador não configurado.");
 
             var destinatario = new DigitalSignatureDestinatario();
 
             destinatario.IdTipoAcao = 1;
             destinatario.OrdemAssinatura = 0;
             destinatario.Nome = locadorName;
-            destinatario.Email = locadorEmail;
+            destinatario.Telefone = prefixoFone + locadorTelefone;
             var assinarOnline = new DigitalSignatureAssinarOnline();
             assinarOnline.AssinarComo = 1;
             assinarOnline.PapelPessoaJuridica = new List<string> { "Locador"};
