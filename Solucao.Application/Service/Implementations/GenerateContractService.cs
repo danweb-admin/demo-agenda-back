@@ -118,25 +118,34 @@ namespace Solucao.Application.Service.Implementations
 
         private async Task<string> CopyFileStream(string modelDirectory, string contractDirectory, string modelFileName, string fileName, DateTime date)
         {
-            FileInfo inputFile = new FileInfo(modelDirectory + modelFileName);
-
-            var yearMonth = date.ToString("yyyy-MM");
-            var day = date.ToString("dd");
-
-            var createdDirectory = $"{contractDirectory}/{yearMonth}/{day}";
-
-            using (FileStream originalFileStream = inputFile.OpenRead())
+            try
             {
-                if (!Directory.Exists(createdDirectory))
-                    Directory.CreateDirectory(createdDirectory);
+                FileInfo inputFile = new FileInfo(modelDirectory + modelFileName);
 
-                var outputFileName = Path.Combine(createdDirectory, fileName);
-                using (FileStream outputFileStream = new FileStream(outputFileName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite))
+                var yearMonth = date.ToString("yyyy-MM");
+                var day = date.ToString("dd");
+
+                var createdDirectory = $"{contractDirectory}/{yearMonth}/{day}";
+
+                using (FileStream originalFileStream = inputFile.OpenRead())
                 {
-                    await originalFileStream.CopyToAsync(outputFileStream);
+                    if (!Directory.Exists(createdDirectory))
+                        Directory.CreateDirectory(createdDirectory);
+
+                    var outputFileName = Path.Combine(createdDirectory, fileName);
+                    using (FileStream outputFileStream = new FileStream(outputFileName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite))
+                    {
+                        await originalFileStream.CopyToAsync(outputFileStream);
+                    }
+                    return outputFileName;
                 }
-                return outputFileName;
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.StackTrace);
+                throw new Exception(ex.Message.ToString());
+            }
+            
         }
 
         private bool ExecuteReplace(string copiedFile, IEnumerable<ModelAttributes> attributes, CalendarViewModel calendar)
@@ -333,7 +342,7 @@ namespace Solucao.Application.Service.Implementations
                 var createdDirectory = $"{outputDirectory}/{yearMonth}/{day}";
 
                 var process = new Process();
-                process.StartInfo.FileName = "soffice";
+                process.StartInfo.FileName = "/Applications/LibreOffice.app/Contents/MacOS/soffice\n";
                 process.StartInfo.Arguments = $"--headless --convert-to pdf --outdir \"{createdDirectory}\" \"{inputFilePath}\"";
                 process.StartInfo.CreateNoWindow = true;
                 process.StartInfo.UseShellExecute = false;
