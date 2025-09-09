@@ -325,19 +325,26 @@ namespace Solucao.Application.Service.Implementations
 
         private void ConvertDocxToPdf(string inputFilePath, string outputDirectory, DateTime date)
         {
+            try
+            {
+                var yearMonth = date.ToString("yyyy-MM");
+                var day = date.ToString("dd");
+
+                var createdDirectory = $"{outputDirectory}/{yearMonth}/{day}";
+
+                var process = new Process();
+                process.StartInfo.FileName = "soffice";
+                process.StartInfo.Arguments = $"--headless --convert-to pdf --outdir \"{createdDirectory}\" \"{inputFilePath}\"";
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.UseShellExecute = false;
+                process.Start();
+                process.WaitForExit();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.StackTrace);
+            }
             
-            var yearMonth = date.ToString("yyyy-MM");
-            var day = date.ToString("dd");
-
-            var createdDirectory = $"{outputDirectory}/{yearMonth}/{day}";
-
-            var process = new Process();
-            process.StartInfo.FileName = "soffice";
-            process.StartInfo.Arguments = $"--headless --convert-to pdf --outdir \"{createdDirectory}\" \"{inputFilePath}\"";
-            process.StartInfo.CreateNoWindow = true;
-            process.StartInfo.UseShellExecute = false;
-            process.Start();
-            process.WaitForExit();
         }
 
         private async Task AddDigitalSignature(Guid calendarId, string inputFilePath)
