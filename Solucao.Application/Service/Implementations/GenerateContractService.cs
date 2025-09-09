@@ -263,7 +263,7 @@ namespace Solucao.Application.Service.Implementations
         {
             var useList = Environment.GetEnvironmentVariable("UseList");
 
-            if (useList == "N")
+            if (useList == "S")
                 return;
 
             TimeSpan difference = calendar.EndTime.Value - calendar.StartTime.Value;
