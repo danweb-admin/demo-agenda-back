@@ -302,7 +302,9 @@ namespace Solucao.Application.Data.Repositories
                         "p1.Name as MotoristaRecolhe, " +
                         "p.Name as MotoristaEntrega, " +
                         "e.Color, " + 
-                        "cli.CellPhone " +
+                        "cli.CellPhone, " +
+                        "cli.Address + ', ' + cli.Number + ' - ' + cli.Complement as Endereco "+
+
                     "from Calendars as c " +
                     "inner join Equipaments as e on c.EquipamentId = e.id " +
                     "inner join Clients as cli on c.ClientId = cli.Id " +

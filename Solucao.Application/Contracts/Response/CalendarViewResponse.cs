@@ -13,6 +13,7 @@ namespace Solucao.Application.Contracts.Response
         public string MotoristaEntrega { get; set; }
 		public string Color { get; set; }
 		public string CellPhone { get; set; }
+		public string Endereco { get; set; }
 
 	}
 }
