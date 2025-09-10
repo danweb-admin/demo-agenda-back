@@ -75,6 +75,10 @@ namespace Solucao.Application.Service.Implementations
             destinatario.OrdemAssinatura = contador;
             destinatario.Nome = locacao.Client.Name;
             destinatario.Telefone = prefixoFone + locacao.Client.CellPhone;
+
+            Console.WriteLine("destinatario.Telefone -- LOCATARIO: " + destinatario.Telefone);
+
+            
             var assinarOnline = new DigitalSignatureAssinarOnline();
             assinarOnline.AssinarComo = 1;
             //if (dest.IsPF)
@@ -200,6 +204,9 @@ namespace Solucao.Application.Service.Implementations
             destinatario.OrdemAssinatura = 0;
             destinatario.Nome = locadorName;
             destinatario.Telefone = prefixoFone + locadorTelefone;
+
+            Console.WriteLine("destinatario.Telefone -- LOCADOR: " + destinatario.Telefone);
+            
             var assinarOnline = new DigitalSignatureAssinarOnline();
             assinarOnline.AssinarComo = 1;
             assinarOnline.PapelPessoaJuridica = new List<string> { "Locador"};
