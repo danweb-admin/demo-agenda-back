@@ -364,12 +364,12 @@ namespace Solucao.Application.Service.Implementations
             var assinatura = new DigitalSignature();
             
             assinatura.Id = new Guid(),
-            assinatura.CalendarId = calendarId,
-            assinatura.IdPasta = Guid.Parse(idPasta),
-            assinatura.IdResponsavel = Guid.Parse(idResponsavel),
-            assinatura.NomeProcesso = inputFilePath.Replace(".docx", ".pdf"),
-            assinatura.Status = "pending",
-            assinatura.CreatedAt = DateTime.Now
+            assinatura.CalendarId = calendarId;
+            assinatura.IdPasta = Guid.Parse(idPasta);
+            assinatura.IdResponsavel = Guid.Parse(idResponsavel);
+            assinatura.NomeProcesso = inputFilePath.Replace(".docx", ".pdf");
+            assinatura.Status = "pending";
+            assinatura.CreatedAt = DateTime.Now;
 
             
 
