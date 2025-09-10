@@ -342,7 +342,7 @@ namespace Solucao.Application.Service.Implementations
                 var createdDirectory = $"{outputDirectory}/{yearMonth}/{day}";
 
                 var process = new Process();
-                process.StartInfo.FileName = "/Applications/LibreOffice.app/Contents/MacOS/soffice\n";
+                process.StartInfo.FileName = "soffice";
                 process.StartInfo.Arguments = $"--headless --convert-to pdf --outdir \"{createdDirectory}\" \"{inputFilePath}\"";
                 process.StartInfo.CreateNoWindow = true;
                 process.StartInfo.UseShellExecute = false;
