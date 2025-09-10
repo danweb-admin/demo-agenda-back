@@ -64,8 +64,8 @@ namespace Solucao.Application.Service.Implementations
             var destinatarios = new List<DigitalSignatureDestinatario>();
             int contador = 1;
 
-            if (locacao.Client.ClientDigitalSignatures.Count() == 0)
-                throw new DigitalSignatureException("Signatário não configurado, verifique cadastro do cliente");
+            //if (locacao.Client.ClientDigitalSignatures.Count() == 0)
+                //throw new DigitalSignatureException("Signatário não configurado, verifique cadastro do cliente");
 
             AddLocador(ref destinatarios);
                 
