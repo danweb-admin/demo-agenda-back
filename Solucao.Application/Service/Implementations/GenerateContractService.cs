@@ -361,12 +361,15 @@ namespace Solucao.Application.Service.Implementations
             var idPasta = Environment.GetEnvironmentVariable("IdPasta");
             var idResponsavel = Environment.GetEnvironmentVariable("IdResponsavel");
 
+            Console.WriteLine($"idPasta: {idPasta}");
+            Console.WriteLine($"idResponsavel: {idResponsavel}");
+
             var assinatura = new DigitalSignature();
             
             assinatura.Id = new Guid();
             assinatura.CalendarId = calendarId;
-            assinatura.IdPasta = Guid.Parse(idPasta);
-            assinatura.IdResponsavel = Guid.Parse(idResponsavel);
+            assinatura.IdPasta = Guid.Parse("7dbdc3c0-ed1b-4f72-bb2a-b3520150071b");
+            assinatura.IdResponsavel = Guid.Parse("49c4c9db-b3a9-4de1-b2d6-dc8ac9d99f03");
             assinatura.NomeProcesso = inputFilePath.Replace(".docx", ".pdf");
             assinatura.Status = "pending";
             assinatura.CreatedAt = DateTime.Now;
