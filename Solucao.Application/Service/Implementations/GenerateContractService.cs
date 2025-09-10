@@ -363,7 +363,7 @@ namespace Solucao.Application.Service.Implementations
 
             var assinatura = new DigitalSignature();
             
-            assinatura.Id = new Guid(),
+            assinatura.Id = new Guid();
             assinatura.CalendarId = calendarId;
             assinatura.IdPasta = Guid.Parse(idPasta);
             assinatura.IdResponsavel = Guid.Parse(idResponsavel);
