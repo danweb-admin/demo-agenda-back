@@ -121,7 +121,7 @@ namespace Solucao.Application.Service.Implementations
             string json = System.Text.Json.JsonSerializer.Serialize(envioAssinatura);
 
             string url = $"{apiRest}{enviarDocumentosParaAssinar}";
-
+            Console.WriteLine("url: " + url);
             using var client = new HttpClient();
 
             // Adicionando os headers necessários
