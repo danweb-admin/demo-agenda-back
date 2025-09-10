@@ -361,17 +361,17 @@ namespace Solucao.Application.Service.Implementations
             var idPasta = Environment.GetEnvironmentVariable("IdPasta");
             var idResponsavel = Environment.GetEnvironmentVariable("IdResponsavel");
 
-            var assinatura = new DigitalSignature
-            {
-                Id = new Guid(),
-                CalendarId = calendarId,
-                IdPasta = Guid.Parse(idPasta),
-                IdResponsavel = Guid.Parse(idResponsavel),
-                NomeProcesso = inputFilePath.Replace(".docx", ".pdf"),
-                Status = "pending",
-                CreatedAt = DateTime.Now
+            var assinatura = new DigitalSignature();
+            
+            assinatura.Id = new Guid(),
+            assinatura.CalendarId = calendarId,
+            assinatura.IdPasta = Guid.Parse(idPasta),
+            assinatura.IdResponsavel = Guid.Parse(idResponsavel),
+            assinatura.NomeProcesso = inputFilePath.Replace(".docx", ".pdf"),
+            assinatura.Status = "pending",
+            assinatura.CreatedAt = DateTime.Now
 
-            };
+            
 
             await assinaturaRepository.Add(assinatura);
         }
