@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DocumentFormat.OpenXml.InkML;
+using Microsoft.EntityFrameworkCore;
 using NetDevPack.Data;
 using Solucao.Application.Contracts.Response;
 using Solucao.Application.Data.Entities;
@@ -256,6 +257,8 @@ namespace Solucao.Application.Data.Repositories
 
         public async Task<IEnumerable<CalendarReportResponse>> CalendarReport(DateTime dataIncial, DateTime dataFinal, Guid? clientId, Guid? equipmentId, string status)
         {
+
+
             var sql = "select " +
                         "c.DATE as Date," +
                         "cli.Name as ClientName," +
@@ -290,35 +293,14 @@ namespace Solucao.Application.Data.Repositories
             return await Db.CalendarReports.FromSqlRaw(sql).ToListAsync();
         }
 
-        public async Task<IEnumerable<CalendarViewResponse>> CalendarView(DateTime startDate, DateTime endDate)
+        public async Task<IEnumerable<CalendarViewResponse>> CalendarView(DateTime startDate, DateTime endDate, bool isAdmin)
         {
-            var sql = "select " +
-                        "starttime as start," +
-                        "endtime as 'end'," +
-                        "e.name + ' - ' + convert(varchar(15),cli.Name)  as title, " +
-                        "e.name as EquipamentoFull, " +
-                        "cli.Name + ' - ' + CONVERT(varchar(15),ci.Nome) + ' - ' + s.Sigla as ClienteFull, " +
-                        "c.status, " +
-                        "p1.Name as MotoristaRecolhe, " +
-                        "p.Name as MotoristaEntrega, " +
-                        "e.Color, " + 
-                        "cli.CellPhone, " +
-                        "cli.Address + ', ' + cli.Number + ' - ' + cli.Complement as Endereco "+
+            var results = await Db.CalendarViewResponses
+                .FromSqlRaw("EXEC GetCalendars @startDate = {0}, @endDate = {1}, @isAdmin = {2}", startDate, endDate, isAdmin ? 1 : 0)
+                .ToListAsync();
 
-                    "from Calendars as c " +
-                    "inner join Equipaments as e on c.EquipamentId = e.id " +
-                    "inner join Clients as cli on c.ClientId = cli.Id " +
-                    "inner join Cities as ci on cli.CityId = ci.Id " +
-                    "inner join States as s on ci.StateId = s.Id " +
-                    "left join People as p on c.DriverId = p.Id " +
-                    "left join People as p1 on c.DriverCollectsId = p1.Id " +
-                    "where " +
-                    "c.Active = 1 AND " +
-                    "c.status in (1,2) AND " +
-                    $@"[Date] BETWEEN '{startDate.ToString("yyyy-MM-dd")}' and '{endDate.ToString("yyyy-MM-dd")}'   " +
-                    "order by [date]";
 
-            return await Db.CalendarViewResponses.FromSqlRaw(sql).ToListAsync();
+            return results;
         }
 
         private string In(List<Guid> list)

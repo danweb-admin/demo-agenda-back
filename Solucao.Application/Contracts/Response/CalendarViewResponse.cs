@@ -3,6 +3,7 @@ namespace Solucao.Application.Contracts.Response
 {
 	public class CalendarViewResponse
 	{
+		public Guid? CalendarId { get; set; }
 		public string Title { get; set; }
 		public DateTime Start { get; set; }
 		public DateTime End { get; set; }
@@ -14,6 +15,7 @@ namespace Solucao.Application.Contracts.Response
 		public string Color { get; set; }
 		public string CellPhone { get; set; }
 		public string Endereco { get; set; }
+
 
 	}
 }

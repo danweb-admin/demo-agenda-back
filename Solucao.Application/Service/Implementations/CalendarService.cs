@@ -528,9 +528,9 @@ namespace Solucao.Application.Service.Implementations
 
         
 
-        public async Task<IEnumerable<CalendarViewResponse>> CalendarView(DateTime startDate, DateTime endDate)
+        public async Task<IEnumerable<CalendarViewResponse>> CalendarView(DateTime startDate, DateTime endDate,bool isAdmin)
         {
-            return await calendarRepository.CalendarView(startDate,endDate);
+            return await calendarRepository.CalendarView(startDate,endDate,isAdmin);
         }
     }
 }

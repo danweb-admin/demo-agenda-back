@@ -218,7 +218,7 @@ namespace Solucao.API.Controllers
         public async Task<IActionResult> CalendarView([FromQuery] DateTime startDate, DateTime endDate)
         {
 
-            return Ok(await calendarService.CalendarView(startDate,endDate));
+            return Ok(await calendarService.CalendarView(startDate,endDate,true));
         }
     }
 }

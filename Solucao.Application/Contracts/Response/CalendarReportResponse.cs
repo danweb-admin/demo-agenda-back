@@ -3,6 +3,7 @@ namespace Solucao.Application.Contracts.Response
 {
 	public class CalendarReportResponse
 	{
+		public Guid? CalendarId { get; set; }
 		public DateTime Date { get; set; }
 		public string ClientName { get; set; }
 		public string EquipmentName { get; set; }
