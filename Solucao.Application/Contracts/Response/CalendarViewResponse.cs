@@ -15,6 +15,7 @@ namespace Solucao.Application.Contracts.Response
 		public string Color { get; set; }
 		public string CellPhone { get; set; }
 		public string Endereco { get; set; }
+		public string Note { get; set; }
 
 
 	}

@@ -23,7 +23,8 @@
       "launchUrl": "swagger",
       "applicationUrl": "http://localhost:8080",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DbServer": "161.35.255.131"
 
       }
     },

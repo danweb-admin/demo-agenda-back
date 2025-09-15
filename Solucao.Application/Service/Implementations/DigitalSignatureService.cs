@@ -64,8 +64,8 @@ namespace Solucao.Application.Service.Implementations
             var destinatarios = new List<DigitalSignatureDestinatario>();
             int contador = 1;
 
-            //if (locacao.Client.ClientDigitalSignatures.Count() == 0)
-                //throw new DigitalSignatureException("Signatário não configurado, verifique cadastro do cliente");
+            if (locacao.Client.ClientDigitalSignatures.Count() == 0)
+                throw new DigitalSignatureException("Signatário não configurado, verifique cadastro do cliente");
 
             AddLocador(ref destinatarios);
                 
@@ -75,10 +75,6 @@ namespace Solucao.Application.Service.Implementations
             destinatario.OrdemAssinatura = contador;
             destinatario.Nome = locacao.Client.Name;
             destinatario.Telefone = prefixoFone + locacao.Client.CellPhone;
-
-            Console.WriteLine("destinatario.Telefone -- LOCATARIO: " + destinatario.Telefone);
-
-            
             var assinarOnline = new DigitalSignatureAssinarOnline();
             assinarOnline.AssinarComo = 1;
             //if (dest.IsPF)
@@ -125,7 +121,7 @@ namespace Solucao.Application.Service.Implementations
             string json = System.Text.Json.JsonSerializer.Serialize(envioAssinatura);
 
             string url = $"{apiRest}{enviarDocumentosParaAssinar}";
-            Console.WriteLine("url: " + url);
+
             using var client = new HttpClient();
 
             // Adicionando os headers necessários
@@ -204,9 +200,6 @@ namespace Solucao.Application.Service.Implementations
             destinatario.OrdemAssinatura = 0;
             destinatario.Nome = locadorName;
             destinatario.Telefone = prefixoFone + locadorTelefone;
-
-            Console.WriteLine("destinatario.Telefone -- LOCADOR: " + destinatario.Telefone);
-            
             var assinarOnline = new DigitalSignatureAssinarOnline();
             assinarOnline.AssinarComo = 1;
             assinarOnline.PapelPessoaJuridica = new List<string> { "Locador"};
@@ -228,11 +221,14 @@ namespace Solucao.Application.Service.Implementations
         {
             // Converte a string ISO 8601 para DateTime
             DateTime dataConvertida = DateTime.Parse(webhook.DataHoraAtual);
+            // Definindo o fuso horário do Brasil
+            TimeZoneInfo tzBrasil = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
+            // Windows → "E. South America Standard Time"
 
-            // Converte para horário local (opcional, se estiver em UTC)
-            DateTime dataBrasileira = dataConvertida.ToLocalTime();
+            // Convertendo para horário do Brasil
+            DateTime dataBrasil = TimeZoneInfo.ConvertTimeFromUtc(dataConvertida, tzBrasil);
 
-            evento.DataHoraAtual = dataBrasileira;
+            evento.DataHoraAtual = dataConvertida;
             evento.Evento = await DescribeEvent(webhook.IdEvento);
 
             if (incluirSignatario && webhook.Signatarios?.Any() == true)
