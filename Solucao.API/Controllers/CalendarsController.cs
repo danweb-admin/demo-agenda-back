@@ -102,10 +102,26 @@ namespace Solucao.API.Controllers
                     model.Note += result.ErrorMessage;
             }
             
-            var user = await userService.GetByName("administrado");
-            Console.WriteLine("User.Identity.Name " + User.Identity.Name);
-            Console.WriteLine("user" + user);
-            Console.WriteLine("model" + model);
+            var user = await userService.GetByName(User.Identity.Name);
+
+            if (user == null)
+            {
+                var token = HttpContext.Request.Headers["Authorization"].ToString();
+
+                if (string.IsNullOrEmpty(token))
+                    return NotFound("Token não fornecido. Entre em contato com o suporte.");
+
+                user = await userService.GetByToken(token.Replace("Bearer ", ""));
+
+                if (user == null)
+                    return NotFound("Você não tem permissão para visualizar os dados dessa página. Entre em contato com o suporte.");
+
+                var hoje = DateTime.Now;
+
+                if (hoje.Date > user.Token_Expire.Value.Date)
+                    return NotFound("Token expirado. Entre em contato com o suporte.");
+            }
+
 
             result = await calendarService.Add(model, user.Id);
 
@@ -132,6 +148,7 @@ namespace Solucao.API.Controllers
 
             var user = await userService.GetByName(User.Identity.Name);
 
+            
 
             result = await calendarService.Update(model, user.Id);
 
@@ -147,7 +164,6 @@ namespace Solucao.API.Controllers
         {
             ValidationResult result;
             result = await calendarService.ValidateLease(model.Date, model.ClientId, model.EquipamentId, model.CalendarSpecifications, model.StartTime1, model.EndTime1);
-            var token = HttpContext.Request.Headers["Authorization"].ToString();
 
 
             if (result != null)
@@ -158,9 +174,25 @@ namespace Solucao.API.Controllers
                     model.Note += result.ErrorMessage;
             }
 
-            //var user = await userService.GetByName(User.Identity.Name);
-            var user = await userService.GetByName("administrado");
+            var user = await userService.GetByName(User.Identity.Name);
+           
+            if (user == null)
+            {
+                var token = HttpContext.Request.Headers["Authorization"].ToString();
 
+                if (string.IsNullOrEmpty(token))
+                    return NotFound("Token não fornecido. Entre em contato com o suporte.");
+
+                user = await userService.GetByToken(token.Replace("Bearer ", ""));
+
+                if (user == null)
+                    return NotFound("Você não tem permissão para visualizar os dados dessa página. Entre em contato com o suporte.");
+
+                var hoje = DateTime.Now;
+
+                if (hoje.Date > user.Token_Expire.Value.Date)
+                    return NotFound("Token expirado. Entre em contato com o suporte.");
+            }
 
             result = await calendarService.UpdateAgendamento(model, user.Id);
 
