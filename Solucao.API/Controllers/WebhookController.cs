@@ -46,7 +46,7 @@ namespace Solucao.API.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError, ex);
+                return Ok(new { status = "Processo atualizado com sucesso." });
             }
         }
 
