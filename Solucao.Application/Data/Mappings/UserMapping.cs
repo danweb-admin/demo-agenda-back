@@ -43,6 +43,15 @@ namespace Solucao.Application.Data.Mappings
             builder.Property(c => c.UpdatedAt)
                 .HasColumnType("datetime");
 
+            builder.Property(c => c.Token_Expire)
+                .HasColumnName("token_expire")
+                .HasColumnType("datetime2");
+
+            builder.Property(c => c.Token)
+                .HasColumnName("token")
+                .HasColumnType("varchar(100)")
+                .HasMaxLength(100);
+
 
             builder.Property(c => c.Active)
                 .HasColumnType("bit")

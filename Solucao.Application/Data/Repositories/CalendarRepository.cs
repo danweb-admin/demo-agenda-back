@@ -103,6 +103,41 @@ namespace Solucao.Application.Data.Repositories
 
         }
 
+        public async Task<ValidationResult> UpdateAgendamento(Calendar calendar)
+        {
+            try
+            {
+                var entidade = await Db.Calendars.FindAsync(calendar.Id);
+
+                if (entidade != null)
+                {
+                    entidade.Status = calendar.Status;
+                    entidade.Date = calendar.Date;
+                    entidade.StartTime = calendar.StartTime;
+                    entidade.EndTime = calendar.EndTime;
+                    entidade.UpdatedAt = calendar.UpdatedAt;
+                    entidade.UserId = calendar.UserId;
+
+                    Db.Entry(entidade).Property(x => x.Status).IsModified = true;
+                    Db.Entry(entidade).Property(x => x.Date).IsModified = true;
+                    Db.Entry(entidade).Property(x => x.StartTime).IsModified = true;
+                    Db.Entry(entidade).Property(x => x.EndTime).IsModified = true;
+                    Db.Entry(entidade).Property(x => x.UpdatedAt).IsModified = true;
+                    Db.Entry(entidade).Property(x => x.UserId).IsModified = true;
+
+                    await Db.SaveChangesAsync();
+                }
+
+                
+                return ValidationResult.Success;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.InnerException.Message);
+            }
+
+        }
+
         public async Task<IEnumerable<Calendar>> GetCalendarsByDate(DateTime date)
         {
 

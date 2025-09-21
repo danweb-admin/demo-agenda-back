@@ -19,7 +19,7 @@ namespace Solucao.API.Controllers
 {
     [Route("api/v1")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class ClientsController : ControllerBase
     {
         private readonly IClientService clientService;
@@ -42,6 +42,7 @@ namespace Solucao.API.Controllers
         }
 
         [HttpGet("client")]
+        [AllowAnonymous]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(Client))]
         [SwaggerResponse((int)HttpStatusCode.BadRequest, Type = typeof(ApplicationError))]
         [SwaggerResponse((int)HttpStatusCode.Conflict, Type = typeof(ApplicationError))]

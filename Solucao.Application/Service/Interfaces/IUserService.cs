@@ -18,6 +18,8 @@ namespace Solucao.Application.Service.Interfaces
 
         Task<UserViewModel> GetByName(string Name);
 
+        Task<UserViewModel> GetByToken(string Token);
+
         Task<ValidationResult> Add(User user, Guid loggedUserId);
 
         Task<ValidationResult> Update(User user, Guid id, Guid loggedUserId);

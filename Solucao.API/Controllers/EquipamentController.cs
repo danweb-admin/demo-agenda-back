@@ -28,6 +28,7 @@ namespace Solucao.API.Controllers
         }
 
         [HttpGet("equipaments")]
+        [AllowAnonymous]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(Equipament))]
         [SwaggerResponse((int)HttpStatusCode.BadRequest, Type = typeof(ApplicationError))]
         [SwaggerResponse((int)HttpStatusCode.Conflict, Type = typeof(ApplicationError))]

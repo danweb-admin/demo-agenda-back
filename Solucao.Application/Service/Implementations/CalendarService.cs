@@ -56,13 +56,13 @@ namespace Solucao.Application.Service.Implementations
 
             if (!string.IsNullOrEmpty(calendar.StartTime1))
             {
-                var start = calendar.Date.ToString("yyyy-MM-dd") + " " + calendar.StartTime1.Insert(2, ":");
+                var start = calendar.Date.ToString("yyyy-MM-dd") + " " + calendar.StartTime1.Replace(":","").Insert(2, ":");
                 calendar.StartTime = DateTime.Parse(start);
             }
 
             if (!string.IsNullOrEmpty(calendar.EndTime1))
             {
-                var end = calendar.Date.ToString("yyyy-MM-dd") + " " + calendar.EndTime1.Insert(2, ":");
+                var end = calendar.Date.ToString("yyyy-MM-dd") + " " + calendar.EndTime1.Replace(":", "").Insert(2, ":");
                 calendar.EndTime = DateTime.Parse(end);
             }
 
@@ -140,6 +140,29 @@ namespace Solucao.Application.Service.Implementations
 
 
         }
+
+        public async Task<ValidationResult> UpdateAgendamento(CalendarViewModel calendar, Guid user)
+        {
+            var agendamento = mapper.Map<Calendar>(calendar);
+            agendamento.UserId = user;
+            agendamento.UpdatedAt = DateTime.Now;
+
+            if (!string.IsNullOrEmpty(calendar.StartTime1))
+            {
+                var start = calendar.Date.ToString("yyyy-MM-dd") + " " + calendar.StartTime1.Replace(":", "").Insert(2, ":");
+                agendamento.StartTime = DateTime.Parse(start);
+            }
+
+            if (!string.IsNullOrEmpty(calendar.EndTime1))
+            {
+                var end = calendar.Date.ToString("yyyy-MM-dd") + " " + calendar.EndTime1.Replace(":", "").Insert(2, ":");
+                agendamento.EndTime = DateTime.Parse(end);
+            }
+
+            return await calendarRepository.UpdateAgendamento(agendamento);
+        }
+
+
 
         public async Task<ValidationResult> ValidateLease(DateTime date, Guid clientId, Guid equipamentId, IList<CalendarSpecifications> specifications, string startTime, string endTime)
         {
@@ -532,5 +555,7 @@ namespace Solucao.Application.Service.Implementations
         {
             return await calendarRepository.CalendarView(startDate,endDate,isAdmin);
         }
+
+        
     }
 }

@@ -15,6 +15,7 @@ namespace Solucao.Application.Service.Interfaces
     {
         Task<ValidationResult> Add(CalendarViewModel calendar, Guid user);
         Task<ValidationResult> Update(CalendarViewModel calendar, Guid user);
+        Task<ValidationResult> UpdateAgendamento(CalendarViewModel calendar, Guid user);
         Task<IEnumerable<CalendarViewModel>> GetAll(DateTime date);
         Task<IEnumerable<EquipamentList>> GetAllByDate(DateTime date);
         Task<CalendarViewModel> GetById(Guid id);

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Solucao.Application.Contracts;
@@ -120,6 +121,9 @@ namespace Solucao.Application.Service.Implementations
             return mapper.Map<UserViewModel>(await userRepository.GetByEmail(email));
         }
 
-        
+        public async Task<UserViewModel> GetByToken(string Token)
+        {
+            return mapper.Map<UserViewModel>(await userRepository.GetByToken(Token));
+        }
     }
 }

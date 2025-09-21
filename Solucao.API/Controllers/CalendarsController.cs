@@ -41,21 +41,21 @@ namespace Solucao.API.Controllers
         }
 
         [HttpGet("calendar")]
-        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(Calendar))]
-        [SwaggerResponse((int)HttpStatusCode.BadRequest, Type = typeof(ApplicationError))]
-        [SwaggerResponse((int)HttpStatusCode.Conflict, Type = typeof(ApplicationError))]
-        [SwaggerResponse((int)HttpStatusCode.NotFound, Type = typeof(ApplicationError))]
         public async Task<IEnumerable<EquipamentList>> GetAllByDateAsync([FromQuery] CalendarRequest model)
         {
             logger.LogInformation($"{nameof(CalendarsController)} -{nameof(GetAllAsync)} | Inicio da chamada");
             return await calendarService.GetAllByDate(model.Date);
         }
 
+        [HttpGet("calendar/by-id")]
+        [AllowAnonymous]
+        public async Task<CalendarViewModel> GetByIdAsync([FromQuery] Guid id)
+        {
+            logger.LogInformation($"{nameof(CalendarsController)} -{nameof(GetAllAsync)} | Inicio da chamada");
+            return await calendarService.GetById(id);
+        }
+
         [HttpGet("calendar/schedules")]
-        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(Calendar))]
-        [SwaggerResponse((int)HttpStatusCode.BadRequest, Type = typeof(ApplicationError))]
-        [SwaggerResponse((int)HttpStatusCode.Conflict, Type = typeof(ApplicationError))]
-        [SwaggerResponse((int)HttpStatusCode.NotFound, Type = typeof(ApplicationError))]
         public async Task<IEnumerable<CalendarViewModel>> SchedulesAsync([FromQuery] CalendarRequest model)
         {
             logger.LogInformation($"{nameof(CalendarsController)} -{nameof(SchedulesAsync)} | Inicio da chamada");
@@ -73,10 +73,6 @@ namespace Solucao.API.Controllers
         }
 
         [HttpGet("calendar/availability")]
-        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(Calendar))]
-        [SwaggerResponse((int)HttpStatusCode.BadRequest, Type = typeof(ApplicationError))]
-        [SwaggerResponse((int)HttpStatusCode.Conflict, Type = typeof(ApplicationError))]
-        [SwaggerResponse((int)HttpStatusCode.NotFound, Type = typeof(ApplicationError))]
         public async Task<string> AvailabilityAsync([FromQuery] CalendarRequest model)
         {
             logger.LogInformation($"{nameof(CalendarsController)} -{nameof(AvailabilityAsync)} | Inicio da chamada");
@@ -90,10 +86,7 @@ namespace Solucao.API.Controllers
         }
 
         [HttpPost("calendar")]
-        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(Calendar))]
-        [SwaggerResponse((int)HttpStatusCode.BadRequest, Type = typeof(ApplicationError))]
-        [SwaggerResponse((int)HttpStatusCode.Conflict, Type = typeof(ApplicationError))]
-        [SwaggerResponse((int)HttpStatusCode.NotFound, Type = typeof(ApplicationError))]
+        [AllowAnonymous]
         public async Task<IActionResult> PostAsync([FromBody] CalendarViewModel model)
         {
             logger.LogInformation($"{nameof(CalendarsController)} - {nameof(PostAsync)} | Inicio da chamada");
@@ -109,7 +102,7 @@ namespace Solucao.API.Controllers
                     model.Note += result.ErrorMessage;
             }
             
-            var user = await userService.GetByName(User.Identity.Name);
+            var user = await userService.GetByName("administrado");
             Console.WriteLine("User.Identity.Name " + User.Identity.Name);
             Console.WriteLine("user" + user);
             Console.WriteLine("model" + model);
@@ -123,10 +116,7 @@ namespace Solucao.API.Controllers
         }
 
         [HttpPut("calendar/{id}")]
-        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(Calendar))]
-        [SwaggerResponse((int)HttpStatusCode.BadRequest, Type = typeof(ApplicationError))]
-        [SwaggerResponse((int)HttpStatusCode.Conflict, Type = typeof(ApplicationError))]
-        [SwaggerResponse((int)HttpStatusCode.NotFound, Type = typeof(ApplicationError))]
+        [AllowAnonymous]
         public async Task<IActionResult> PutAsync([FromBody] CalendarViewModel model)
         {
             ValidationResult result;
@@ -142,6 +132,7 @@ namespace Solucao.API.Controllers
 
             var user = await userService.GetByName(User.Identity.Name);
 
+
             result = await calendarService.Update(model, user.Id);
 
             if (result != null)
@@ -150,11 +141,36 @@ namespace Solucao.API.Controllers
             return Ok(result);
         }
 
+        [HttpPut("calendar/agendamento/{id}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> PutAgendamentoAsync([FromBody] CalendarViewModel model)
+        {
+            ValidationResult result;
+            result = await calendarService.ValidateLease(model.Date, model.ClientId, model.EquipamentId, model.CalendarSpecifications, model.StartTime1, model.EndTime1);
+            var token = HttpContext.Request.Headers["Authorization"].ToString();
+
+
+            if (result != null)
+            {
+                if (!result.ErrorMessage.Contains("minutos"))
+                    return NotFound(result);
+                else
+                    model.Note += result.ErrorMessage;
+            }
+
+            //var user = await userService.GetByName(User.Identity.Name);
+            var user = await userService.GetByName("administrado");
+
+
+            result = await calendarService.UpdateAgendamento(model, user.Id);
+
+            if (result != null)
+                return NotFound(result);
+
+            return Ok(result);
+        }
+
         [HttpPut("calendar/update-driver-or-technique-calendar")]
-        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(Calendar))]
-        [SwaggerResponse((int)HttpStatusCode.BadRequest, Type = typeof(ApplicationError))]
-        [SwaggerResponse((int)HttpStatusCode.Conflict, Type = typeof(ApplicationError))]
-        [SwaggerResponse((int)HttpStatusCode.NotFound, Type = typeof(ApplicationError))]
         public async Task<IActionResult> UpdateDriverOrTechniqueCalendarAsync([FromBody] CalendarRequest model)
         {
             ValidationResult result;
@@ -167,10 +183,6 @@ namespace Solucao.API.Controllers
         }
 
         [HttpPut("calendar/update-status-or-travel-on-calendar")]
-        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(Calendar))]
-        [SwaggerResponse((int)HttpStatusCode.BadRequest, Type = typeof(ApplicationError))]
-        [SwaggerResponse((int)HttpStatusCode.Conflict, Type = typeof(ApplicationError))]
-        [SwaggerResponse((int)HttpStatusCode.NotFound, Type = typeof(ApplicationError))]
         public async Task<IActionResult> UpdateStatusOrTravelOnCalendarAsync([FromBody] CalendarRequest model)
         {
             ValidationResult result;
@@ -183,10 +195,6 @@ namespace Solucao.API.Controllers
         }
 
         [HttpPut("calendar/update-contract-made")]
-        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(Calendar))]
-        [SwaggerResponse((int)HttpStatusCode.BadRequest, Type = typeof(ApplicationError))]
-        [SwaggerResponse((int)HttpStatusCode.Conflict, Type = typeof(ApplicationError))]
-        [SwaggerResponse((int)HttpStatusCode.NotFound, Type = typeof(ApplicationError))]
         public async Task<IActionResult> UpdateContractMadeAsync([FromBody] CalendarRequest model)
         {
             ValidationResult result;
@@ -217,6 +225,30 @@ namespace Solucao.API.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> CalendarView([FromQuery] DateTime startDate, DateTime endDate)
         {
+            return Ok(await calendarService.CalendarView(startDate, endDate, true));
+        }
+    
+
+        [HttpGet("calendar/view-agendamento")]
+        [AllowAnonymous]
+        public async Task<IActionResult> CalendarViewAgendamentos([FromQuery] DateTime startDate, DateTime endDate)
+        {
+            var token = HttpContext.Request.Headers["Authorization"].ToString();
+
+            if (string.IsNullOrEmpty(token))
+                return NotFound("Token não fornecido. Entre em contato com o suporte.");
+
+            var user = await userService.GetByToken(token.Replace("Bearer ", ""));
+
+            if (user == null)
+                return NotFound("Você não tem permissão para visualizar os dados dessa página. Entre em contato com o suporte.");
+
+            var hoje = DateTime.Now;
+
+            if (hoje.Date >  user.Token_Expire.Value.Date )
+                return NotFound("Token expirado. Entre em contato com o suporte.");
+
+
 
             return Ok(await calendarService.CalendarView(startDate,endDate,true));
         }
