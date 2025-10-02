@@ -282,7 +282,7 @@ namespace Solucao.API.Controllers
 
 
 
-            return Ok(await calendarService.CalendarView(startDate,endDate,true));
+            return Ok(await calendarService.CalendarView(startDate,endDate,true, user.Id    ));
         }
     }
 }

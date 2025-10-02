@@ -8,6 +8,7 @@ using Solucao.Application.Data.Entities;
 using Solucao.Application.Data.Interfaces;
 using Solucao.Application.Data.Repositories;
 using Solucao.Application.Service.Interfaces;
+using Solucao.Application.Utils.Enum;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -29,13 +30,17 @@ namespace Solucao.Application.Service.Implementations
         private SpecificationRepository specificationRepository;
         private IClientRepository clientRepository;
         private readonly IMapper mapper;
-        public CalendarService(CalendarRepository _calendarRepository, IMapper _mapper, SpecificationRepository _specificationRepository, IEquipamentRepository _equipamentRepository, IClientRepository _clientRepository)
+        private readonly HistoryRepository history;
+
+
+        public CalendarService(CalendarRepository _calendarRepository, IMapper _mapper, SpecificationRepository _specificationRepository, IEquipamentRepository _equipamentRepository, IClientRepository _clientRepository, HistoryRepository _history)
         {
             calendarRepository = _calendarRepository;
             mapper = _mapper;
             specificationRepository = _specificationRepository;
             equipamentRepository = _equipamentRepository;
             clientRepository = _clientRepository;
+            history = _history;
         }
 
         public async Task<IEnumerable<CalendarViewModel>> GetAll(DateTime date)
@@ -556,6 +561,11 @@ namespace Solucao.Application.Service.Implementations
             return await calendarRepository.CalendarView(startDate,endDate,isAdmin);
         }
 
-        
+        public async Task<IEnumerable<CalendarViewResponse>> CalendarView(DateTime startDate, DateTime endDate, bool isAdmin, Guid user)
+        {
+            await history.Add(TableEnum.Calendar, user, OperationEnum.Agendamentos, user);
+
+            return await calendarRepository.CalendarView(startDate, endDate, isAdmin);
+        }
     }
 }

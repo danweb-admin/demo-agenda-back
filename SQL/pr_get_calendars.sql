@@ -20,7 +20,7 @@ BEGIN
         cli.CellPhone,
         cli.Address + ', ' + cli.Number + ' - ' + cli.Complement AS Endereco,
         CASE WHEN @isAdmin = 1 THEN c.Id ELSE NULL END AS CalendarId,
-        c.Note
+        c.note
     FROM Calendars AS c 
     INNER JOIN Equipaments AS e ON c.EquipamentId = e.Id 
     INNER JOIN Clients AS cli ON c.ClientId = cli.Id 
@@ -29,8 +29,8 @@ BEGIN
     LEFT JOIN People AS p ON c.DriverId = p.Id
     LEFT JOIN People AS p1 ON c.DriverCollectsId = p1.Id
     WHERE c.Active = 1 
-      AND [Date] BETWEEN @startDate AND @endDate 
-      AND [status] in (1,2)
+    AND CAST([Date] AS DATE) BETWEEN @startDate AND @endDate
+    AND [status] in (1,2)
       
     ORDER BY [Date];
 END

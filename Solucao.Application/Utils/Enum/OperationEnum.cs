@@ -7,7 +7,8 @@ namespace Solucao.Application.Utils.Enum
         Alteracao,
         AlteracaoSenha,
         Validado,
-        Logou
+        Logou,
+        Agendamentos
     }
 }
 
