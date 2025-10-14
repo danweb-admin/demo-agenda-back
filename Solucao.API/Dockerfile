@@ -5,6 +5,9 @@ EXPOSE 80
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
 
+ENV LogPath=/app/logs
+RUN mkdir -p /app/logs
+
 # It's important to keep lines from here down to "COPY . ." identical in all Dockerfiles
 # to take advantage of Docker's build cache, to speed up local container builds
 COPY "Solucao.sln" "Solucao.sln"
