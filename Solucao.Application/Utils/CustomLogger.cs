@@ -43,15 +43,16 @@ namespace Solucao.Application.Utils
                 var today = DateTime.Now.ToString("yyyy-MM-dd");
                 var path = Environment.GetEnvironmentVariable("LogPath");
 
-                string fullPath = $"{path}/log{today}.txt";
+                // 🔧 Se a variável não estiver definida, usa /app/logs como padrão
+                if (string.IsNullOrEmpty(path))
+                    path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
 
-                // Se o arquivo não existe, cria e fecha imediatamente
-                if (!File.Exists(fullPath))
-                {
-                    using (File.Create(fullPath)) { }
-                }
+                // ✅ Garante que o diretório existe
+                Directory.CreateDirectory(path);
 
-                //  Garante que apenas uma thread escreve por vez
+                string fullPath = Path.Combine(path, $"log{today}.txt");
+
+                // 🔒 Evita conflito de escrita simultânea
                 lock (_lock)
                 {
                     using (var stream = new FileStream(fullPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
@@ -63,9 +64,8 @@ namespace Solucao.Application.Utils
             }
             catch (Exception e)
             {
-                    Console.WriteLine(e);
+                Console.WriteLine($"Erro ao escrever no log: {e}");
             }
-           
         }
     }
 }
