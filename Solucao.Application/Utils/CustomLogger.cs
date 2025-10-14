@@ -12,6 +12,8 @@ namespace Solucao.Application.Utils
     {
         readonly string loggerName;
         readonly CustomLoggerProviderConfiguration config;
+        private static readonly object _lock = new(); 
+
         public CustomLogger(string name, CustomLoggerProviderConfiguration _config)
         {
             loggerName = name;
@@ -43,13 +45,20 @@ namespace Solucao.Application.Utils
 
                 string fullPath = $"{path}/log{today}.txt";
 
+                // Se o arquivo não existe, cria e fecha imediatamente
                 if (!File.Exists(fullPath))
-                    File.Create(fullPath);
-
-                using (StreamWriter streamWriter = new StreamWriter(fullPath, true))
                 {
-                    streamWriter.WriteLine(message);
-                    streamWriter.Close();
+                    using (File.Create(fullPath)) { }
+                }
+
+                //  Garante que apenas uma thread escreve por vez
+                lock (_lock)
+                {
+                    using (var stream = new FileStream(fullPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+                    using (var writer = new StreamWriter(stream))
+                    {
+                        writer.WriteLine(message);
+                    }
                 }
             }
             catch (Exception e)
