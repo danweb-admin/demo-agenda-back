@@ -72,7 +72,7 @@ namespace Solucao.Application.Service.Implementations
             }
 
             if (string.IsNullOrEmpty(calendar.Status))
-                calendar.Status = "pending";
+                calendar.Status = "2";
 
             var _calendar = mapper.Map<Calendar>(calendar);
 
@@ -133,7 +133,7 @@ namespace Solucao.Application.Service.Implementations
                 }
 
                 if (string.IsNullOrEmpty(calendar.Status))
-                    calendar.Status = "pending";
+                    calendar.Status = "2";
 
                 var _calendarAdd = mapper.Map<Calendar>(calendar);
 
