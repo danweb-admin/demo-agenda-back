@@ -12,6 +12,7 @@ namespace Solucao.Application.Contracts
         public bool Active { get; set; }
         public string Name { get; set; }
         public int Order { get; set; }
+        public string Color { get; set; }
         public List<EquipamentSpecifications> EquipamentSpecifications { get; set; }
         public List<EquipamentConsumableViewModel> EquipamentConsumables { get; set; }
 
