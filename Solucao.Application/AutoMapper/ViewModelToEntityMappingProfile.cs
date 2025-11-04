@@ -31,6 +31,9 @@ namespace Solucao.Application.AutoMapper
             CreateMap<TimeValueViewModel,TimeValue>();
             CreateMap<ClientSpecificationViewModel,ClientSpecification>();
             CreateMap<ClientDigitalSignatureViewModel, ClientDigitalSignature>();
+            CreateMap<PriceTableViewModel,PriceTable>();
+
+
 
         }
     }

@@ -55,6 +55,8 @@ namespace Solucao.Application.Data
         public DbSet<DigitalSignature> DigitalSignatures { get; set; }
         public DbSet<DigitalSignatureEvents> DigitalSignatureEvents { get; set; }
         public DbSet<ClientDigitalSignature> ClientDigitalSignatures { get; set; }
+        public DbSet<PriceTable> PriceTable { get; set; }
+
 
         public DbSet<CalendarReportResponse> CalendarReports { get; set; }
         public DbSet<CalendarViewResponse> CalendarViewResponses { get; set; }
@@ -92,6 +94,8 @@ namespace Solucao.Application.Data
             modelBuilder.ApplyConfiguration(new DigitalSignatureMapping());
             modelBuilder.ApplyConfiguration(new DigitalSignatureEventsMapping());
             modelBuilder.ApplyConfiguration(new ClientDigitalSignatureMapping());
+            modelBuilder.ApplyConfiguration(new PriceTableMapping());
+
 
 
             // Relationship
@@ -193,6 +197,10 @@ namespace Solucao.Application.Data
             modelBuilder.Entity<ClientSpecification>()
                 .HasOne(x => x.Client)
                 .WithMany(x => x.ClientSpecifications);
+
+            modelBuilder.Entity<PriceTable>()
+                .HasOne(c => c.Equipment)
+                .WithMany(e => e.PriceTable);
 
             modelBuilder.Entity<CalendarReportResponse>().HasNoKey();
 

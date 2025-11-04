@@ -13,5 +13,7 @@ namespace Solucao.Application.Data.Entities
         public string Color { get; set; }
         public List<EquipamentSpecifications> EquipamentSpecifications { get; set; }
         public List<EquipamentConsumable> EquipamentConsumables { get; set; }
+        public List<PriceTable> PriceTable { get; set; }
+
     }
 }

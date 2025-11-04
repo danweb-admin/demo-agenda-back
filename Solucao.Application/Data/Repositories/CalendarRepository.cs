@@ -51,6 +51,8 @@ namespace Solucao.Application.Data.Repositories
             return await Db.Calendars
                         .Include(x => x.Equipament)
                         .Include(x => x.Client)
+                        .Include(x => x.Client.City)
+                        .Include(x => x.Client.State)
                         .Where(x => x.Date.Date == date && x.Active && x.Status == confirmed)
                         .OrderBy(x => x.Equipament.Name)
                         .ToListAsync();
@@ -63,6 +65,8 @@ namespace Solucao.Application.Data.Repositories
                         .Include(x => x.Equipament)
                         .Include(x => x.Client)
                         .ThenInclude(x => x.ClientDigitalSignatures)
+                        .Include(x => x.Client.City)
+                        .Include(x => x.Client.State)
                         .FirstOrDefaultAsync(x => x.Id == id);
         }
 

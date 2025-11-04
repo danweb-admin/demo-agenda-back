@@ -50,7 +50,7 @@ namespace Solucao.Application.Contracts
         public Person Technique { get; set; }
         public Person Driver { get; set; }
         public Person DriverCollects { get; set; }
-        public Client Client { get; set; }
+        public ClientViewModel Client { get; set; }
         public Equipament Equipament { get; set; }
         public IList<CalendarSpecifications> CalendarSpecifications { get; set; }
         public IList<CalendarEquipamentConsumablesViewModel> CalendarEquipamentConsumables { get; set; }

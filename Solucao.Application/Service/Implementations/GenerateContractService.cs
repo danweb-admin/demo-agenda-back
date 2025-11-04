@@ -68,6 +68,8 @@ namespace Solucao.Application.Service.Implementations
             var contractPath = Environment.GetEnvironmentVariable("DocsPath");
             var useList = Environment.GetEnvironmentVariable("UseList");
 
+            var t = await calendarRepository.GetById(request.CalendarId);
+
             var calendar = mapper.Map<CalendarViewModel>(await calendarRepository.GetById(request.CalendarId));
             calendar.RentalTime = CalculateMinutes(calendar.StartTime.Value, calendar.EndTime.Value);
             await SearchCustomerValue(calendar);
@@ -206,10 +208,10 @@ namespace Solucao.Application.Service.Implementations
             }
 
             // Converter valor para string (assumindo que a propriedade é do tipo string)
-            return FormatValue(value.ToString(), attrType);
+            return FormatValue(value.ToString(), attrType, propertieName);
         }
 
-        private string FormatValue(string value, string attrType)
+        private string FormatValue(string value, string attrType, string propertie)
         {
             switch (attrType)
             {
@@ -229,8 +231,23 @@ namespace Solucao.Application.Service.Implementations
                 case "time_extenso":
                     return timeExtenso(value);
                 default:
+                    if (propertie.ToUpper().Contains("CPF"))
+                        return Regex.Replace(value, @"^(\d{3})(\d{3})(\d{3})(\d{2})$", "$1.$2.$3-$4");
+                    if (propertie.ToUpper().Contains("CNPJ"))
+                        return Regex.Replace(value, @"^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$", "$1.$2.$3/$4-$5");
+                    if (propertie.ToUpper().Contains("ZIPCODE"))
+                        return Regex.Replace(value, @"^(\d{5})(\d{3})$", "$1-$2");
+                    if (propertie.ToUpper().Contains("CELL"))
+                        return FormatCelular(value);
                     return value;
             }
+        }
+
+        private string FormatCelular(string input)
+        {
+            // sempre 11 dígitos: 2 DDD + 9 número
+            if (input.Length != 11) return input;
+            return $"({input.Substring(0, 2)}) {input.Substring(2, 5)}-{input.Substring(7, 4)}";
         }
 
         private string decimalExtenso(string value)

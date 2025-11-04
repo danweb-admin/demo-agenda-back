@@ -42,8 +42,9 @@ namespace Solucao.Application.AutoMapper
 
             CreateMap<ClientDigitalSignature, ClientDigitalSignatureViewModel>();
 
-
             CreateMap<DigitalSignatureEvents, DigitalSignatureEventsViewModel>();
+
+            CreateMap<PriceTable, PriceTableViewModel>();
 
 
         }
