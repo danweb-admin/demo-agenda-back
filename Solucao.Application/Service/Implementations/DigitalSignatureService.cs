@@ -44,6 +44,9 @@ namespace Solucao.Application.Service.Implementations
             string apiRest = Environment.GetEnvironmentVariable("ApiArqSign");
             string appKey = Environment.GetEnvironmentVariable("AppKey");
             string subscriptionKey = Environment.GetEnvironmentVariable("SubscriptionKey");
+            string locadorEmail = Environment.GetEnvironmentVariable("LocadorEmail");
+            string locadorTelefone = Environment.GetEnvironmentVariable("LocadorPhone");
+
 
             if (string.IsNullOrEmpty(appKey))
                 throw new DigitalSignatureException("Você não tem permissão para enviar Assinatura Digital, contate o suporte.");
@@ -73,8 +76,17 @@ namespace Solucao.Application.Service.Implementations
 
             destinatario.IdTipoAcao = 1;
             destinatario.OrdemAssinatura = contador;
+            
             destinatario.Nome = locacao.Client.Name;
-            destinatario.Telefone = prefixoFone + locacao.Client.CellPhone;
+
+            if (string.IsNullOrEmpty(locadorEmail))
+                destinatario.Telefone = prefixoFone + locacao.Client.CellPhone;
+            if (string.IsNullOrEmpty(locadorTelefone))
+                destinatario.Email = locacao.Client.Email;
+
+            destinatario.AlterarNotificacoes = 1;
+            destinatario.RetornarLinkProcesso = 1;
+
             var assinarOnline = new DigitalSignatureAssinarOnline();
             assinarOnline.AssinarComo = 1;
             //if (dest.IsPF)
@@ -142,8 +154,13 @@ namespace Solucao.Application.Service.Implementations
 
             var resposta = JsonConvert.DeserializeObject<DigitalSignatureResponse>(result);
 
+            if (resposta.Destinatarios.Any())
+                await AdicionaLinkProcesso(resposta.IdProcesso, resposta.Destinatarios);
+
             assinatura.IdProcesso = resposta.IdProcesso;
             assinatura.Status = "in_progress";
+
+
 
             await assinaturaRepository.Update(assinatura);
 
@@ -181,25 +198,47 @@ namespace Solucao.Application.Service.Implementations
            
         }
 
+        private async Task AdicionaLinkProcesso(Guid IdProcesso, ICollection<DigitalSignatureDestinatarioResponse> Destinatarios)
+        {
+            foreach (var item in Destinatarios)
+            {
+                var evento = new DigitalSignatureEvents
+                {
+                    DataHoraAtual = DateTime.Now,
+                    Evento = $"Nome: {item.NomeSignatario}, LinkProcesso: {item.LinkProcesso}",
+                    IdProcesso = IdProcesso
+                };
+
+                await eventosRepository.Add(evento);
+            }
+        }
+
         private void AddLocador(ref List<DigitalSignatureDestinatario> destinatarios)
         {
             string locadorName = Environment.GetEnvironmentVariable("LocadorName");
-            //string locadorEmail = Environment.GetEnvironmentVariable("LocadorEmail");
+            string locadorEmail = Environment.GetEnvironmentVariable("LocadorEmail");
             string locadorTelefone = Environment.GetEnvironmentVariable("LocadorPhone");
 
 
             if (string.IsNullOrEmpty(locadorName))
                 throw new DigitalSignatureException("Nome do Locador não configurado.");
 
-            if (string.IsNullOrEmpty(locadorTelefone))
-                throw new DigitalSignatureException("Telefone do Locador não configurado.");
+            //if (string.IsNullOrEmpty(locadorTelefone))
+            //    throw new DigitalSignatureException("Telefone do Locador não configurado.");
 
             var destinatario = new DigitalSignatureDestinatario();
 
             destinatario.IdTipoAcao = 1;
             destinatario.OrdemAssinatura = 0;
             destinatario.Nome = locadorName;
-            destinatario.Telefone = prefixoFone + locadorTelefone;
+            if (string.IsNullOrEmpty(locadorEmail))
+                destinatario.Telefone = prefixoFone + locadorTelefone;
+            if (string.IsNullOrEmpty(locadorTelefone))
+                destinatario.Email = locadorEmail;
+            destinatario.AlterarNotificacoes = 1;
+            destinatario.RetornarLinkProcesso = 1;
+
+
             var assinarOnline = new DigitalSignatureAssinarOnline();
             assinarOnline.AssinarComo = 1;
             assinarOnline.PapelPessoaJuridica = new List<string> { "Locador"};
@@ -218,17 +257,9 @@ namespace Solucao.Application.Service.Implementations
         }
 
         private async Task PreencherEventoAsync(DigitalSignatureEvents evento, DigitalSignatureResponse webhook, bool incluirSignatario = false)
-        {
-            // Converte a string ISO 8601 para DateTime
-            DateTime dataConvertida = DateTime.Parse(webhook.DataHoraAtual);
-            // Definindo o fuso horário do Brasil
-            TimeZoneInfo tzBrasil = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
-            // Windows → "E. South America Standard Time"
+        { 
 
-            // Convertendo para horário do Brasil
-            DateTime dataBrasil = TimeZoneInfo.ConvertTimeFromUtc(dataConvertida, tzBrasil);
-
-            evento.DataHoraAtual = dataConvertida;
+            evento.DataHoraAtual = DateTime.Now;
             evento.Evento = await DescribeEvent(webhook.IdEvento);
 
             if (incluirSignatario && webhook.Signatarios?.Any() == true)

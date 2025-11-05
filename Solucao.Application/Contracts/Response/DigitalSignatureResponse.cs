@@ -11,5 +11,7 @@ namespace Solucao.Application.Contracts.Response
 		public string DataHoraAtual { get; set; }
 
         public ICollection<DigitalSignatureSignatarioResponse> Signatarios { get; set; }
+        public ICollection<DigitalSignatureDestinatarioResponse> Destinatarios { get; set; }
+
     }
 }

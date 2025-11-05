@@ -8,6 +8,8 @@ namespace Solucao.Application.Contracts.Requests
 		public string Nome { get; set; }
 		public string Email { get; set; }
 		public string Telefone { get; set; }
+		public int AlterarNotificacoes { get; set; }
+		public int RetornarLinkProcesso { get; set; }
 		public DigitalSignatureAssinarOnline AssinarOnline { get; set; }
 	}
 }
