@@ -18,6 +18,7 @@ namespace Solucao.Application.Service.Interfaces
 
         Task<ValidationResult> Update(PriceTableViewModel priceTable);
 
+        Task<decimal> ValueByEquipment(PriceTableRequest model);
     }
 }
 

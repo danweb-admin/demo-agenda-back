@@ -42,11 +42,40 @@ namespace Solucao.Application.Data.Repositories
             }
         }
 
+        public async Task<ValidationResult> AddRange(List<PriceTable> priceTable)
+        {
+            try
+            {
+
+                await Db.PriceTable.AddRangeAsync(priceTable);
+                await Db.SaveChangesAsync();
+                return ValidationResult.Success;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.InnerException.Message);
+            }
+        }
+
         public async Task<ValidationResult> Update(PriceTable priceTable)
         {
             try
             {
                 DbSet.Update(priceTable);
+                await Db.SaveChangesAsync();
+                return ValidationResult.Success;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.InnerException.Message);
+            }
+
+        }
+
+        public async Task<ValidationResult> SaveChange()
+        {
+            try
+            {
                 await Db.SaveChangesAsync();
                 return ValidationResult.Success;
             }

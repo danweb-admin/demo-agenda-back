@@ -34,6 +34,8 @@ namespace Solucao.API.Controllers
             return Ok(result);
         }
 
+
+
         
 
         [HttpPost("price-table")]
@@ -41,9 +43,19 @@ namespace Solucao.API.Controllers
         {
             var result = await priceTableService.Save(model);
 
-            //if (result != null)
-            //    return NotFound(result);
+            if (result != null)
+                return NotFound(result);
             return Ok();
+        }
+
+        [HttpGet("price-table/value-by-equipment")]
+        public async Task<IActionResult> ValueBy([FromQuery] PriceTableRequest model)
+        {
+            var result = await priceTableService.ValueByEquipment(model);
+
+            if (result == 0)
+                return NotFound(result);
+            return Ok(result);
         }
 
 
