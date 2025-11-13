@@ -121,6 +121,7 @@ namespace Solucao.Application.Data.Repositories
                     entidade.EndTime = calendar.EndTime;
                     entidade.UpdatedAt = calendar.UpdatedAt;
                     entidade.UserId = calendar.UserId;
+                    entidade.Note = calendar.Note;
 
                     Db.Entry(entidade).Property(x => x.Status).IsModified = true;
                     Db.Entry(entidade).Property(x => x.Date).IsModified = true;
@@ -128,6 +129,8 @@ namespace Solucao.Application.Data.Repositories
                     Db.Entry(entidade).Property(x => x.EndTime).IsModified = true;
                     Db.Entry(entidade).Property(x => x.UpdatedAt).IsModified = true;
                     Db.Entry(entidade).Property(x => x.UserId).IsModified = true;
+                    Db.Entry(entidade).Property(x => x.Note).IsModified = true;
+
 
                     await Db.SaveChangesAsync();
                 }

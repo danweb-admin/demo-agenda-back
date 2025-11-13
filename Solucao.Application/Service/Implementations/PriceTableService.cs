@@ -117,6 +117,11 @@ namespace Solucao.Application.Service.Implementations
 
         public async Task<decimal> ValueByEquipment(PriceTableRequest model)
         {
+            var useList = Environment.GetEnvironmentVariable("UseList");
+
+            if (useList == "S")
+                return 0;
+
             model.StartTime = model.StartTime.Replace(":", "");
             model.EndTime = model.EndTime.Replace(":", "");
             var now = DateTime.Now;

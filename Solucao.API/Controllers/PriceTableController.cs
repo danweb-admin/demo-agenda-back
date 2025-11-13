@@ -15,7 +15,7 @@ namespace Solucao.API.Controllers
 {
     [Route("api/v1")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class PriceTableController : ControllerBase
     {
         private readonly IPriceTableService priceTableService;
@@ -53,8 +53,6 @@ namespace Solucao.API.Controllers
         {
             var result = await priceTableService.ValueByEquipment(model);
 
-            if (result == 0)
-                return NotFound(result);
             return Ok(result);
         }
 

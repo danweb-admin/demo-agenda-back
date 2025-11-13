@@ -68,8 +68,6 @@ namespace Solucao.Application.Service.Implementations
             var contractPath = Environment.GetEnvironmentVariable("DocsPath");
             var useList = Environment.GetEnvironmentVariable("UseList");
 
-            var t = await calendarRepository.GetById(request.CalendarId);
-
             var calendar = mapper.Map<CalendarViewModel>(await calendarRepository.GetById(request.CalendarId));
             calendar.RentalTime = CalculateMinutes(calendar.StartTime.Value, calendar.EndTime.Value);
             await SearchCustomerValue(calendar);
