@@ -24,6 +24,13 @@ namespace Solucao.Application.Data.Repositories
             DbSet = Db.Set<Calendar>();
         }
 
+        public async Task<IEnumerable<Calendar>> GetAllById(Guid[] ids)
+        {
+
+            return await Db.Calendars.Where(c => ids.Contains(c.Id)).OrderBy(x => x.Date).ToListAsync();;
+
+        }
+
         public async Task<IEnumerable<Calendar>> GetAll(DateTime date)
         {
 
@@ -59,6 +66,18 @@ namespace Solucao.Application.Data.Repositories
 
         }
 
+        public async Task<IEnumerable<Calendar>> GetAllByClient(Guid clientId, Guid equipmentId, DateTime startDate, DateTime endDate)
+        {
+            
+
+            return await Db.Calendars
+                    .Include(x => x.Client)
+                    .Where(x => x.ClientId == clientId && x.EquipamentId == equipmentId && x.Date.Date >= startDate && x.Date.Date <= endDate)
+                    .OrderBy(x => x.Date)
+                    .ToListAsync();
+
+        }
+
         public async Task<Calendar> GetById(Guid id)
         {
             return await Db.Calendars
@@ -75,6 +94,8 @@ namespace Solucao.Application.Data.Repositories
             return await Db.Calendars
                         .FirstOrDefaultAsync(x => x.Uid == uid);
         }
+
+        
 
 
         public async Task<ValidationResult> Add(Calendar calendar)
@@ -96,8 +117,15 @@ namespace Solucao.Application.Data.Repositories
         {
             try
             {
-                DbSet.Update(calendar);
+                var entity = await DbSet.FirstOrDefaultAsync(x => x.Id == calendar.Id);
+
+                if (entity == null)
+                    throw new Exception("Registro não encontrado");
+
+                Db.Entry(entity).CurrentValues.SetValues(calendar);
+
                 await Db.SaveChangesAsync();
+
                 return ValidationResult.Success;
             }
             catch (Exception e)
@@ -130,6 +158,60 @@ namespace Solucao.Application.Data.Repositories
                     Db.Entry(entidade).Property(x => x.UpdatedAt).IsModified = true;
                     Db.Entry(entidade).Property(x => x.UserId).IsModified = true;
                     Db.Entry(entidade).Property(x => x.Note).IsModified = true;
+
+
+                    await Db.SaveChangesAsync();
+                }
+
+                
+                return ValidationResult.Success;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.InnerException.Message);
+            }
+
+        }
+
+        public async Task<ValidationResult> UpdateContract(Calendar calendar)
+        {
+            try
+            {
+                var entidade = await Db.Calendars.FindAsync(calendar.Id);
+
+                if (entidade != null)
+                {
+                    entidade.Status = calendar.Status;
+                    entidade.Date = calendar.Date;
+                    entidade.ContractPath = calendar.ContractPath;
+                    entidade.FileNameDocx = calendar.FileNameDocx;
+                    entidade.FileNamePdf = calendar.FileNamePdf;
+                    entidade.ContractMade = true;
+                    entidade.UpdatedAt = DateTime.Now;
+
+                    entidade.RentalTime = calendar.RentalTime;
+                    entidade.Value = calendar.Value;
+                    entidade.TotalValue = calendar.TotalValue;
+                    entidade.Discount = calendar.Discount;
+                    entidade.Freight = calendar.Freight;
+                    entidade.Others = calendar.Others;
+                    
+
+                    Db.Entry(entidade).Property(x => x.Status).IsModified = true;
+                    Db.Entry(entidade).Property(x => x.Date).IsModified = true;
+
+                    Db.Entry(entidade).Property(x => x.RentalTime).IsModified = true;
+                    Db.Entry(entidade).Property(x => x.Value).IsModified = true;
+                    Db.Entry(entidade).Property(x => x.TotalValue).IsModified = true;
+                    Db.Entry(entidade).Property(x => x.Discount).IsModified = true;
+                    Db.Entry(entidade).Property(x => x.Freight).IsModified = true;
+                    Db.Entry(entidade).Property(x => x.Others).IsModified = true;
+
+                    Db.Entry(entidade).Property(x => x.ContractPath).IsModified = true;
+                    Db.Entry(entidade).Property(x => x.FileNameDocx).IsModified = true;
+                    Db.Entry(entidade).Property(x => x.FileNamePdf).IsModified = true;
+                    Db.Entry(entidade).Property(x => x.ContractMade).IsModified = true;
+                    Db.Entry(entidade).Property(x => x.UpdatedAt).IsModified = true;
 
 
                     await Db.SaveChangesAsync();

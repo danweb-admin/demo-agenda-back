@@ -24,7 +24,7 @@ namespace Solucao.Application.Data.Repositories
 
         public async Task<IEnumerable<ModelAttributes>> GetAll()
         {
-            return await Db.ModelAttributes.ToListAsync();
+            return await Db.ModelAttributes.OrderBy(x => x.Order).ToListAsync();
         }
 
         public async Task<ValidationResult> Add(ModelAttributes model)

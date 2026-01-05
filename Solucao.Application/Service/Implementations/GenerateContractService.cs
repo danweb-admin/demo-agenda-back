@@ -8,7 +8,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AutoMapper;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Humanizer;
 using Solucao.Application.Contracts;
 using Solucao.Application.Contracts.Requests;
@@ -62,7 +64,34 @@ namespace Solucao.Application.Service.Implementations
 
         }
 
-        public async Task<ValidationResult> GenerateContract(GenerateContractRequest request)
+        public async Task<IEnumerable<CalendarViewModel>> BuscarLocacoes( Guid cliendId, Guid equipmentId, DateTime startDate, DateTime endDate)
+        {
+            return mapper.Map<IEnumerable<CalendarViewModel>>(await calendarRepository.GetAllByClient(cliendId, equipmentId, startDate,endDate));
+
+        }
+
+        public async Task<ValidationResult> GenerateMultipleContract(string ids)
+        {
+            var ids_ = ids.Split(',');
+
+            var listaLocacoes = await calendarRepository.GetAllById(ids_.Select(Guid.Parse).ToArray());
+
+            foreach (var item in ids_)
+            {
+                var request = new GenerateContractRequest
+                {
+                  CalendarId = Guid.Parse(item)
+                };
+                
+                var result = await GenerateContract(request, mapper.Map<IEnumerable<CalendarViewModel>>(listaLocacoes));
+         
+            }
+
+
+            return ValidationResult.Success;
+        }
+
+        public async Task<ValidationResult> GenerateContract(GenerateContractRequest request, IEnumerable<CalendarViewModel> listaLocacoes)
         {
             var modelPath = Environment.GetEnvironmentVariable("ModelDocsPath");
             var contractPath = Environment.GetEnvironmentVariable("DocsPath");
@@ -72,6 +101,23 @@ namespace Solucao.Application.Service.Implementations
             calendar.RentalTime = CalculateMinutes(calendar.StartTime.Value, calendar.EndTime.Value);
             await SearchCustomerValue(calendar);
             calendar.TotalValue = calendar.Value + calendar.Freight - calendar.Discount + calendar.Additional1;
+            if (listaLocacoes == null)
+            {
+                var list = new List<CalendarViewModel>
+                {
+                  calendar
+                };
+                listaLocacoes = mapper.Map<List<CalendarViewModel>>( list);
+            }
+            var locacoesOrdenadas = listaLocacoes.OrderByDescending(c => c.StartTime).ToList();
+
+            calendar.ListaLocacoes = string.Join("\n",
+                locacoesOrdenadas.Select(c =>
+                    $"{c.StartTime:dd/MM/yyyy} – das {c.StartTime:HH:mm} às {c.EndTime:HH:mm}"
+                )
+            );
+
+            var datasLocacao = listaLocacoes.Select(x => x.Date.Date).ToList();
 
             var model = await modelRepository.GetByEquipament(calendar.EquipamentId);
 
@@ -93,10 +139,15 @@ namespace Solucao.Application.Service.Implementations
                 calendar.FileNameDocx = contractFileName;
                 calendar.FileNamePdf = contractFileName.Replace("docx","pdf");
                 calendar.ContractMade = true;
+                calendar.Status = "1";
+
+                AddMultipleDatesBlock(copiedFile,datasLocacao);
+
+                ReplaceWithParagraphs(copiedFile,calendar.ListaLocacoes);
 
                 ConvertDocxToPdf(copiedFile, contractPath, calendar.Date);
 
-                await calendarRepository.Update(mapper.Map<Calendar>(calendar));
+                await calendarRepository.UpdateContract(mapper.Map<Calendar>(calendar));
 
                 if (useList == "S")
                     await AddDigitalSignature(calendar.Id.Value, contractFileName);
@@ -148,6 +199,175 @@ namespace Solucao.Application.Service.Implementations
             
         }
 
+        private void ReplaceText(WordprocessingDocument wordDoc,     IEnumerable<ModelAttributes> attributes,
+            CalendarViewModel calendar)
+        {
+            string docText;
+            using (StreamReader sr = new StreamReader(wordDoc.MainDocumentPart.GetStream()))
+                docText = sr.ReadToEnd();
+
+            foreach (var item in attributes)
+            {
+                Regex regexText = new Regex(item.FileAttribute.Trim());
+                var valueItem = GetPropertieValue(calendar, item.TechnicalAttribute, item.AttributeType);
+                docText = regexText.Replace(docText, valueItem);
+            }
+
+            using (StreamWriter sw = new StreamWriter(
+                wordDoc.MainDocumentPart.GetStream(FileMode.Create)))
+                sw.Write(docText);
+        }
+
+
+        private void ReplaceWithParagraphs(string filePath, string text)
+        {
+            using var doc = WordprocessingDocument.Open(filePath, true);
+            var body = doc.MainDocumentPart.Document.Body;
+
+            var paragraph = body
+                .Descendants<Paragraph>()
+                .FirstOrDefault(p => p.InnerText.Contains("#ListaLocacoes"));
+
+            if (paragraph == null)
+                return;
+
+            // Remove o texto do placeholder
+            paragraph.RemoveAllChildren<Run>();
+
+            foreach (var line in text.Split('\n'))
+            {
+                var newParagraph = new Paragraph(
+                    new ParagraphProperties(
+                        new SpacingBetweenLines
+                        {
+                            Line = "200",    
+                            Before = "120",  
+                            After = "120"    
+                        }
+                    ),
+                    new Run(
+                        new Text(line)
+                        {
+                            Space = SpaceProcessingModeValues.Preserve
+                        }
+                    )
+                );
+
+                body.InsertAfter(newParagraph, paragraph);
+            }
+
+            // Remove o parágrafo original do placeholder
+            paragraph.Remove();
+
+            doc.MainDocumentPart.Document.Save();
+
+        }
+
+
+        public void AddMultipleDatesBlock(string filePath, List<DateTime> dates)
+        {
+            using var doc = WordprocessingDocument.Open(filePath, true);
+            var body = doc.MainDocumentPart.Document.Body;
+
+            var placeholderText = body
+                .Descendants<Text>()
+                .FirstOrDefault(t => t.Text.Contains("#BLOCO_LOCACOES_MULTIPLAS#"));
+
+            if (placeholderText == null)
+                return;
+
+            if (dates.Count() == 1)
+            {
+                // Remove o parágrafo original do placeholder
+                placeholderText.Remove();
+                return;
+            }
+              
+
+            var paragraph = placeholderText.Ancestors<Paragraph>().First();
+            placeholderText.Text = "";
+
+            var table = CreateMultipleDatesTable(dates);
+
+            paragraph.InsertAfterSelf(table);
+
+            doc.MainDocumentPart.Document.Save();
+        }
+
+        private Table CreateMultipleDatesTable(List<DateTime> dates)
+        {
+            DateTime ultimaData = dates.OrderBy(d => d).Last();
+
+            var culturaPtBr = new CultureInfo("pt-BR");
+
+            string mesAno = ultimaData.ToString("MMM/yy", culturaPtBr).ToUpper(); 
+            
+            var table = new Table();
+
+            // Bordas
+            table.AppendChild(new TableProperties(
+                new TableBorders(
+                    new TopBorder { Val = BorderValues.Single, Size = 8 },
+                    new BottomBorder { Val = BorderValues.Single, Size = 8 },
+                    new LeftBorder { Val = BorderValues.Single, Size = 8 },
+                    new RightBorder { Val = BorderValues.Single, Size = 8 }
+                )
+            ));
+
+            // TÍTULO
+            table.Append(CreateRow(
+                  $"Contrato referente locações até {mesAno}:",
+                bold: true,
+                center: true
+            ));
+
+            // DATAS
+            var formattedDates = string.Join("; ",
+                dates
+                    .OrderBy(d => d)
+                    .Select(d => d.ToString("dd/MM/yy"))
+            );
+
+            table.Append(CreateRow(
+                formattedDates,
+                underline: false,
+                center: true
+            ));
+
+            return table;
+        }
+
+        private TableRow CreateRow(string text, bool bold = false, bool underline = false, bool center = false)
+        {
+            var runProps = new RunProperties();
+
+            if (bold) runProps.Append(new Bold());
+            if (underline) runProps.Append(new Underline { Val = UnderlineValues.Single });
+
+            var paragraphProps = new ParagraphProperties();
+            if (center)
+                paragraphProps.Append(new Justification { Val = JustificationValues.Center });
+
+            var paragraph = new Paragraph(
+                paragraphProps,
+                new Run(runProps, new Text(text) { Space = SpaceProcessingModeValues.Preserve })
+            );
+
+            var cell = new TableCell(paragraph);
+            cell.Append(new TableCellProperties(
+                new TableCellMargin(
+                    new TopMargin { Width = "50", Type = TableWidthUnitValues.Dxa },
+                    new BottomMargin { Width = "50", Type = TableWidthUnitValues.Dxa },
+                    new LeftMargin { Width = "200", Type = TableWidthUnitValues.Dxa },
+                    new RightMargin { Width = "200", Type = TableWidthUnitValues.Dxa }
+                )
+            ));
+
+            return new TableRow(cell);
+        }
+
+
+
         private bool ExecuteReplace(string copiedFile, IEnumerable<ModelAttributes> attributes, CalendarViewModel calendar)
         {
             try
@@ -164,7 +384,7 @@ namespace Solucao.Application.Service.Implementations
                         var valueItem = GetPropertieValue(calendar, item.TechnicalAttribute, item.AttributeType);
                         docText = regexText.Replace(docText, valueItem);
                     }
-
+                    
                     using (StreamWriter sw = new StreamWriter(wordDoc.MainDocumentPart.GetStream(FileMode.Create)))
                         sw.Write(docText);
 
@@ -351,13 +571,15 @@ namespace Solucao.Application.Service.Implementations
         {
             try
             {
+                var pathSoffice = Environment.GetEnvironmentVariable("PathSoffice");
+
                 var yearMonth = date.ToString("yyyy-MM");
                 var day = date.ToString("dd");
 
                 var createdDirectory = $"{outputDirectory}/{yearMonth}/{day}";
 
                 var process = new Process();
-                process.StartInfo.FileName = "soffice";
+                process.StartInfo.FileName = $"{pathSoffice}soffice";
                 process.StartInfo.Arguments = $"--headless --convert-to pdf --outdir \"{createdDirectory}\" \"{inputFilePath}\"";
                 process.StartInfo.CreateNoWindow = true;
                 process.StartInfo.UseShellExecute = false;
@@ -394,6 +616,7 @@ namespace Solucao.Application.Service.Implementations
             await assinaturaRepository.Add(assinatura);
         }
 
-    }
+    
+  }
 }
 
