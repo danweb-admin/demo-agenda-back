@@ -581,8 +581,8 @@ namespace Solucao.Application.Service.Implementations
             var idPasta = Environment.GetEnvironmentVariable("IdPasta");
             var idResponsavel = Environment.GetEnvironmentVariable("IdResponsavel");
 
-            Console.WriteLine($"idPasta: {idPasta}");
-            Console.WriteLine($"idResponsavel: {idResponsavel}");
+            Console.WriteLine($"idPasta------>>>>: {idPasta}");
+            Console.WriteLine($"idResponsavel------->>>: {idResponsavel}");
 
             var assinatura = new DigitalSignature();
             
