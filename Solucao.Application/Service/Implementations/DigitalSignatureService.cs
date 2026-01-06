@@ -80,8 +80,17 @@ namespace Solucao.Application.Service.Implementations
             destinatario.Nome = locacao.Client.Name;
 
             if (string.IsNullOrEmpty(locadorEmail))
+            {
+              if (string.IsNullOrEmpty(locacao.Client.Email))
+                      throw new DigitalSignatureException("Informe telefone do Locatário.");
+            }
                 destinatario.Telefone = prefixoFone + locacao.Client.CellPhone;
             if (string.IsNullOrEmpty(locadorTelefone))
+            {
+              if (string.IsNullOrEmpty(locacao.Client.Email))
+                throw new DigitalSignatureException("Informe e-mail do Locatário.");
+
+            }
                 destinatario.Email = locacao.Client.Email;
 
             destinatario.AlterarNotificacoes = 1;

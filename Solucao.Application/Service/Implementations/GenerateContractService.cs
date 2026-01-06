@@ -381,35 +381,46 @@ namespace Solucao.Application.Service.Implementations
 
         private string GetPropertieValue(object obj, string propertieName, string attrType)
         {
-            // Dividir o nome da propriedade para acessar propriedades aninhadas
-            string[] properties = propertieName.Split('.');
-
-            object value = obj;
-
-            // Iterar sobre as propriedades
-            foreach (var prop in properties)
+            try
             {
-                // Obter tipo do objeto atual
-                Type type = value.GetType();
+              // Dividir o nome da propriedade para acessar propriedades aninhadas
+                  string[] properties = propertieName.Split('.');
 
-                // Obter propriedade pelo nome
-                var propInfo = type.GetProperty(prop);
+                  object value = obj;
 
-                // Se a propriedade não existir, retornar null
-                if (propInfo == null)
-                {
-                    return null;
-                }
+                  // Iterar sobre as propriedades
+                  foreach (var prop in properties)
+                  {
+                      // Obter tipo do objeto atual
+                      Type type = value.GetType();
 
-                // Obter valor da propriedade
-                value = propInfo.GetValue(value);
+                      // Obter propriedade pelo nome
+                      var propInfo = type.GetProperty(prop);
+
+                      // Se a propriedade não existir, retornar null
+                      if (propInfo == null)
+                      {
+                          return null;
+                      }
+
+                      // Obter valor da propriedade
+                      value = propInfo.GetValue(value);
+                  }
+
+                  if (value == null)
+                    return string.Empty;
+
+                  // Converter valor para string (assumindo que a propriedade é do tipo string)
+                  return FormatValue(value.ToString(), attrType, propertieName);
             }
-
-            if (value == null)
-              return string.Empty;
-
-            // Converter valor para string (assumindo que a propriedade é do tipo string)
-            return FormatValue(value.ToString(), attrType, propertieName);
+            catch (Exception ex)
+            {
+                Console.WriteLine($"propertieName: {propertieName}");
+                Console.WriteLine(ex);
+                throw;
+              
+            }
+            
         }
 
         private string FormatValue(string value, string attrType, string propertie)
@@ -581,8 +592,8 @@ namespace Solucao.Application.Service.Implementations
             var idPasta = Environment.GetEnvironmentVariable("IdPasta");
             var idResponsavel = Environment.GetEnvironmentVariable("IdResponsavel");
 
-            Console.WriteLine($"idPasta------>>>>: {idPasta}");
-            Console.WriteLine($"idResponsavel------->>>: {idResponsavel}");
+            Console.WriteLine($"idPasta: {idPasta}");
+            Console.WriteLine($"idResponsavel: {idResponsavel}");
 
             var assinatura = new DigitalSignature();
             
