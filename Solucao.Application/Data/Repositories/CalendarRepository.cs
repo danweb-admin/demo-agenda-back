@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml.InkML;
 using Microsoft.EntityFrameworkCore;
 using NetDevPack.Data;
+using NetDevPack.Specification;
 using Solucao.Application.Contracts.Response;
 using Solucao.Application.Data.Entities;
 using System;
@@ -67,12 +68,17 @@ namespace Solucao.Application.Data.Repositories
         }
 
         public async Task<IEnumerable<Calendar>> GetAllByClient(Guid clientId, Guid equipmentId, DateTime startDate, DateTime endDate)
-        {
-            
+        { 
+            var in_ = new List<string> { "1", "2" };
 
             return await Db.Calendars
                     .Include(x => x.Client)
-                    .Where(x => x.ClientId == clientId && x.EquipamentId == equipmentId && x.Date.Date >= startDate && x.Date.Date <= endDate)
+                    .Where(x => x.ClientId == clientId
+                      && x.EquipamentId == equipmentId
+                      && x.Date.Date >= startDate
+                      && x.Date.Date <= endDate
+                      && in_.Contains(x.Status)
+                      && x.Active)
                     .OrderBy(x => x.Date)
                     .ToListAsync();
 
@@ -117,15 +123,8 @@ namespace Solucao.Application.Data.Repositories
         {
             try
             {
-                var entity = await DbSet.FirstOrDefaultAsync(x => x.Id == calendar.Id);
-
-                if (entity == null)
-                    throw new Exception("Registro não encontrado");
-
-                Db.Entry(entity).CurrentValues.SetValues(calendar);
-
+                DbSet.Update(calendar);
                 await Db.SaveChangesAsync();
-
                 return ValidationResult.Success;
             }
             catch (Exception e)

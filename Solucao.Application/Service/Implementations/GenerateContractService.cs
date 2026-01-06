@@ -199,26 +199,6 @@ namespace Solucao.Application.Service.Implementations
             
         }
 
-        private void ReplaceText(WordprocessingDocument wordDoc,     IEnumerable<ModelAttributes> attributes,
-            CalendarViewModel calendar)
-        {
-            string docText;
-            using (StreamReader sr = new StreamReader(wordDoc.MainDocumentPart.GetStream()))
-                docText = sr.ReadToEnd();
-
-            foreach (var item in attributes)
-            {
-                Regex regexText = new Regex(item.FileAttribute.Trim());
-                var valueItem = GetPropertieValue(calendar, item.TechnicalAttribute, item.AttributeType);
-                docText = regexText.Replace(docText, valueItem);
-            }
-
-            using (StreamWriter sw = new StreamWriter(
-                wordDoc.MainDocumentPart.GetStream(FileMode.Create)))
-                sw.Write(docText);
-        }
-
-
         private void ReplaceWithParagraphs(string filePath, string text)
         {
             using var doc = WordprocessingDocument.Open(filePath, true);
@@ -424,6 +404,9 @@ namespace Solucao.Application.Service.Implementations
                 // Obter valor da propriedade
                 value = propInfo.GetValue(value);
             }
+
+            if (value == null)
+              return string.Empty;
 
             // Converter valor para string (assumindo que a propriedade é do tipo string)
             return FormatValue(value.ToString(), attrType, propertieName);

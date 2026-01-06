@@ -16,13 +16,13 @@
       [ApiController]
       //[Authorize]
       public class GenerateContractController : ControllerBase
-	  {
+	    {
           private readonly IGenerateContractService service;
 
           public GenerateContractController(IGenerateContractService _service)
-		  {
+		      {
               service = _service;
-		  }
+		      }
 
           [HttpGet]
           public async Task<IActionResult> Get(DateTime? date)
