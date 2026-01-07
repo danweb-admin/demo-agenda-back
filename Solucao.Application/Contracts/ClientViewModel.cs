@@ -46,6 +46,7 @@ namespace Solucao.Application.Contracts
         public string Rg { get; set; }
         public string Ie { get; set; }
         public string EquipamentValues { get; set; }
+        public string Document { get; set; }
 
         public object City { get; set; }
         public object State { get; set; }

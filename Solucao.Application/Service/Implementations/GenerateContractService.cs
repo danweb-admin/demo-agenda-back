@@ -98,6 +98,12 @@ namespace Solucao.Application.Service.Implementations
             var useList = Environment.GetEnvironmentVariable("UseList");
 
             var calendar = mapper.Map<CalendarViewModel>(await calendarRepository.GetById(request.CalendarId));
+
+            if (string.IsNullOrEmpty(calendar.Client.Cnpj))
+              calendar.Client.Document = FormatValue(calendar.Client.Cpf,"","CPF");
+            else 
+              calendar.Client.Document = FormatValue(calendar.Client.Cnpj,"","CNPJ");            
+
             calendar.RentalTime = CalculateMinutes(calendar.StartTime.Value, calendar.EndTime.Value);
             await SearchCustomerValue(calendar);
             calendar.TotalValue = calendar.Value + calendar.Freight - calendar.Discount + calendar.Additional1;
@@ -362,6 +368,8 @@ namespace Solucao.Application.Service.Implementations
                     {
                         Regex regexText = new Regex(item.FileAttribute.Trim());
                         var valueItem = GetPropertieValue(calendar, item.TechnicalAttribute, item.AttributeType);
+                        if (valueItem == null)
+                          continue;
                         docText = regexText.Replace(docText, valueItem);
                     }
                     
@@ -591,6 +599,9 @@ namespace Solucao.Application.Service.Implementations
         {
             var idPasta = Environment.GetEnvironmentVariable("IdPasta");
             var idResponsavel = Environment.GetEnvironmentVariable("IdResponsavel");
+
+            if (string.IsNullOrEmpty(idPasta) || string.IsNullOrEmpty(idResponsavel))
+              return;
 
             Console.WriteLine($"idPasta: {idPasta}");
             Console.WriteLine($"idResponsavel: {idResponsavel}");
