@@ -36,14 +36,10 @@ namespace Solucao.API
         {
             services.AddCors(options =>
             {
-                options.AddPolicy("FrontendPolicy", builder =>
-                {
-                    builder
-                        .WithOrigins("https://www.sjc-laser-agenda.site")
-                        .AllowAnyHeader()
-                        .AllowAnyMethod();
-                        // NÃO usar AllowCredentials com JWT no header
-                });
+                options.AddDefaultPolicy(builder =>
+                    builder.AllowAnyOrigin()
+                           .AllowAnyHeader()
+                           .AllowAnyMethod());
             });
 
 
@@ -152,7 +148,7 @@ namespace Solucao.API
             app.UseRouting();
 
             // ⬇️ CORS TEM QUE VIR AQUI
-            app.UseCors("FrontendPolicy");
+            app.UseCors();
 
             app.UseAuthentication();
             app.UseAuthorization();
