@@ -34,7 +34,18 @@ namespace Solucao.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors();
+            services.AddCors(options =>
+            {
+                options.AddPolicy("FrontendPolicy", builder =>
+                {
+                    builder
+                        .WithOrigins("https://www.sjc-laser-agenda.site")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                        // NÃO usar AllowCredentials com JWT no header
+                });
+            });
+
 
             services.Configure<FormOptions>(o =>
             {
