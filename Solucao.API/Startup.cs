@@ -138,32 +138,23 @@ namespace Solucao.API
 
             app.UseHttpsRedirection();
 
-            // Make sure you call this before calling app.UseMvc()
-            //app.UseCors(
-            //    options => options.WithOrigins("http://solucao-laser-dev.s3-website-us-east-1.amazonaws.com").AllowAnyMethod().AllowAnyHeader().AllowAnyOrigin()
-            //);
-            app.UseCors(builder => builder
-                   .AllowAnyOrigin()
-                   .AllowAnyMethod()
-                    .AllowAnyHeader());
-            
+            app.UseRouting();
 
+            // ⬇️ CORS TEM QUE VIR AQUI
+            app.UseCors("FrontendPolicy");
+
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.Use(async (context, next) =>
             {
                 await next();
 
-                if (context.Response.StatusCode == (int)System.Net.HttpStatusCode.Unauthorized)
+                if (context.Response.StatusCode == StatusCodes.Status401Unauthorized)
                 {
                     logger.LogWarning($"Unauthorized request - {context.Request.Method} - {context.Request.Path}");
                 }
             });
-
-            app.UseRouting();
-
-            app.UseAuthentication();
-
-            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
