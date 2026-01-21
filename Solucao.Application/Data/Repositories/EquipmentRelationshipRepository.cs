@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using DocumentFormat.OpenXml.InkML;
 using Microsoft.EntityFrameworkCore;
 using NetDevPack.Data;
 using Solucao.Application.Data.Entities;
@@ -35,7 +36,20 @@ namespace Solucao.Application.Data.Repositories
             return await Db.EquipmentRelantionships.FirstAsync(x => x.Name.Contains(name));
         }
 
-
+        public virtual async Task<IEnumerable<Guid>> GetAparelhos(Guid id)
+        {
+          return await Db.EquipmentRelationshipEquipment
+            .Join(
+              Db.EquipmentRelantionships,
+              ere => ere.EquipmentRelationshipId,
+              er  => er.Id,
+              (ere, er) => new { ere, er }
+            )
+            .Where(x => x.er.Id == id)
+            .Select(x => x.ere.EquipmentId)
+            .ToListAsync();
+                   
+        }
 
         public virtual async Task<ValidationResult> Add(EquipmentRelationship equipament)
         {

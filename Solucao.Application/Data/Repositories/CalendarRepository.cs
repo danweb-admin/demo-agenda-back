@@ -71,10 +71,22 @@ namespace Solucao.Application.Data.Repositories
         { 
             var in_ = new List<string> { "1", "2" };
 
+            var aparelhos = await Db.EquipmentRelationshipEquipment
+            .Join(
+              Db.EquipmentRelantionships,
+              ere => ere.EquipmentRelationshipId,
+              er  => er.Id,
+              (ere, er) => new { ere, er }
+            )
+            .Where(x => x.er.Id == equipmentId)
+            .Select(x => x.ere.EquipmentId)
+            .ToListAsync();
+
             return await Db.Calendars
                     .Include(x => x.Client)
+                    .Include(x => x.Equipament)
                     .Where(x => x.ClientId == clientId
-                      && x.EquipamentId == equipmentId
+                      && aparelhos.Contains( x.EquipamentId)
                       && x.Date.Date >= startDate
                       && x.Date.Date <= endDate
                       && in_.Contains(x.Status)

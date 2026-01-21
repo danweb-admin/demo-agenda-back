@@ -49,6 +49,7 @@ namespace Solucao.Application.Data.Repositories
             }
             catch (Exception e)
             {
+                Console.WriteLine(e);
                 throw;
             }
         }

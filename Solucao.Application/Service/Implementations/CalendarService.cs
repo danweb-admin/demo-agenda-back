@@ -29,17 +29,19 @@ namespace Solucao.Application.Service.Implementations
         private IEquipamentRepository equipamentRepository;
         private SpecificationRepository specificationRepository;
         private IClientRepository clientRepository;
+        private EquipmentRelationshipRepository equipmentRelationshipRepository;
         private readonly IMapper mapper;
         private readonly HistoryRepository history;
 
 
-        public CalendarService(CalendarRepository _calendarRepository, IMapper _mapper, SpecificationRepository _specificationRepository, IEquipamentRepository _equipamentRepository, IClientRepository _clientRepository, HistoryRepository _history)
+        public CalendarService(CalendarRepository _calendarRepository, IMapper _mapper, SpecificationRepository _specificationRepository, IEquipamentRepository _equipamentRepository, IClientRepository _clientRepository, HistoryRepository _history, EquipmentRelationshipRepository _equipmentRelationshipRepository)
         {
             calendarRepository = _calendarRepository;
             mapper = _mapper;
             specificationRepository = _specificationRepository;
             equipamentRepository = _equipamentRepository;
             clientRepository = _clientRepository;
+            equipmentRelationshipRepository = _equipmentRelationshipRepository;
             history = _history;
         }
 
@@ -437,6 +439,7 @@ namespace Solucao.Application.Service.Implementations
 
             var datas = request.Date.Split(",");
             CultureInfo cultureInfo = new CultureInfo("pt-BR");
+            bool indisponivel = false;
 
             foreach (var item in datas)
             {
@@ -462,12 +465,29 @@ namespace Solucao.Application.Service.Implementations
 
                 var rentalTimeString = Utils.Helpers.FormatTime((decimal)rentalTime);
 
-                var result = await clientRepository.GetEquipmentValueByClient(client.Id, request.EquipmentId, rentalTimeString);
+                var aparelhos = await equipmentRelationshipRepository.GetAparelhos(request.EquipmentId);
 
                 // obtem todas as locacoes do dia
                 var calendars = await calendarRepository.GetCalendarsByDate(data);
+                decimal result = 0;
 
-                if (ValidEquipamentInUse(calendars, request.EquipmentId, request.ClientId, start, end))
+                foreach (var aparelho in aparelhos)
+                {
+                    if (ValidEquipamentInUse(calendars,aparelho, request.ClientId, start, end))
+                    {
+                        indisponivel = true;
+                        
+                    }
+                    else
+                    {
+                        indisponivel  = false;
+                        result = await clientRepository.GetEquipmentValueByClient(client.Id, aparelho, rentalTimeString);
+                        break;
+                        
+                    }
+                }
+
+                if (indisponivel)
                 {
                     responses.Add(new BulkSchedulingResponse
                     {
