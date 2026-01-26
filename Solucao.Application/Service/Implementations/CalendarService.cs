@@ -440,6 +440,7 @@ namespace Solucao.Application.Service.Implementations
             var datas = request.Date.Split(",");
             CultureInfo cultureInfo = new CultureInfo("pt-BR");
             bool indisponivel = false;
+            Guid equipmentId = new Guid();
 
             foreach (var item in datas)
             {
@@ -475,11 +476,13 @@ namespace Solucao.Application.Service.Implementations
                 {
                     if (ValidEquipamentInUse(calendars,aparelho, request.ClientId, start, end))
                     {
+                      
                         indisponivel = true;
                         
                     }
                     else
                     {
+                        equipmentId = aparelho;
                         indisponivel  = false;
                         result = await clientRepository.GetEquipmentValueByClient(client.Id, aparelho, rentalTimeString);
                         break;
@@ -514,7 +517,7 @@ namespace Solucao.Application.Service.Implementations
                         Status = "2", //pendente
                         StartTime = start,
                         EndTime = end,
-                        EquipamentId = request.EquipmentId,
+                        EquipamentId = equipmentId,
                         ClientId = request.ClientId,
                         CreatedAt = DateTime.Now,
                         Note = request.Note,
