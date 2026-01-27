@@ -305,6 +305,7 @@ namespace Solucao.Application.Service.Implementations
         {
             var soffice = Environment.GetEnvironmentVariable("PathSoffice");
 
+
             var targetDir = Path.Combine(
                 outputDir,
                 date.ToString("yyyy-MM"),
@@ -347,14 +348,70 @@ namespace Solucao.Application.Service.Implementations
             return obj == null ? "" : FormatValue(obj.ToString(), type, prop);
         }
 
-        private string FormatValue(string value, string type, string prop)
+        private string FormatValue(string value, string attrType, string propertie)
         {
-            return type switch
-            {
-                "datetime" => DateTime.Parse(value).ToString("dd/MM/yyyy"),
-                "decimal" => decimal.Parse(value).ToString("N2", cultureInfo),
-                _ => value
-            };
+          switch (attrType) {
+            case "datetime":
+              return DateTime.Parse(value).ToString("dd/MM/yyyy");
+            case "datetime_extenso":
+              var monthDay = DateTime.Parse(value).ToString("M", cultureInfo);
+              var year = DateTime.Parse(value).ToString("yyyy", cultureInfo);
+              return $"{monthDay} de {year}";
+            case "time":
+              return DateTime.Parse(value).ToString("HH:mm");
+            case "decimal":
+              return decimal.Parse(value).ToString("N2", cultureInfo);
+            case "decimal_extenso":
+              return decimalExtenso(value);
+            case "time_extenso":
+              return timeExtenso(value);
+            default:
+              if (propertie.ToUpper().Contains("CPF"))
+                return Regex.Replace(value, @"^(\d{3})(\d{3})(\d{3})(\d{2})$", "$1.$2.$3-$4");
+              if (propertie.ToUpper().Contains("CNPJ"))
+                return Regex.Replace(value, @"^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$", "$1.$2.$3/$4-$5");
+              if (propertie.ToUpper().Contains("ZIPCODE"))
+                return Regex.Replace(value, @"^(\d{5})(\d{3})$", "$1-$2");
+              if (propertie.ToUpper().Contains("CELL"))
+                return FormatCelular(value);
+              return value;
+            }
+        }
+
+        private string FormatCelular(string input)
+        {
+          // sempre 11 dígitos: 2 DDD + 9 número
+          if (input.Length != 11)
+            return input; return $"({input.Substring(0, 2)}) {input.Substring(2, 5)}-{input.Substring(7, 4)}";
+        }
+
+        private string decimalExtenso(string value)
+        {
+          var decimalSplit = decimal.Parse(value).ToString("n2").Split('.');
+          var part1 = long.Parse(decimalSplit[0].Replace(",", "")).ToWords(cultureInfo).ToTitleCase(TitleCase.First);
+          var part2 = int.Parse(decimalSplit[1]).ToWords(cultureInfo); if (part2 == "zero")
+
+          return $"{part1} reais"; return $"{part1} reais e {part2} centavos";
+        }
+
+        private string timeExtenso(string value)
+        {
+          var minutesTotal = int.Parse(value);
+          int hours = minutesTotal / 60;
+          int minutes = minutesTotal % 60;
+
+          string result = "";
+
+          if (hours == 0) {
+            if (minutes > 0) result += $"{minutes} {(minutes == 1 ? "minuto" : "minutos")}";
+              return result;
+          }
+
+          result = $"{hours} {(hours == 1 ? "hora" : "horas")}";
+
+          if (minutes > 0)
+            result += $" e {minutes} {(minutes == 1 ? "minuto" : "minutos")}";
+          return result;
         }
 
         private async Task SearchCustomerValue(CalendarViewModel calendar)
