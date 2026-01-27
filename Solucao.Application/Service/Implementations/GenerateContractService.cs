@@ -175,35 +175,28 @@ namespace Solucao.Application.Service.Implementations
 
         private async Task<string> CopyFileStream(string modelDirectory, string contractDirectory, string modelFileName, string fileName, DateTime date)
         {
-            try
+            FileInfo inputFile = new FileInfo(Path.Combine(modelDirectory, modelFileName));
+
+            var yearMonth = date.ToString("yyyy-MM");
+            var day = date.ToString("dd");
+
+            var createdDirectory = Path.Combine(contractDirectory, yearMonth, day);
+
+            if (!Directory.Exists(createdDirectory))
+                Directory.CreateDirectory(createdDirectory);
+
+            var outputFileName = Path.Combine(createdDirectory, fileName);
+
+            using (var originalFileStream = inputFile.Open(FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var outputFileStream = new FileStream(outputFileName, FileMode.Create, FileAccess.Write,FileShare.None)) // 🔴 ESSENCIAL
             {
-                FileInfo inputFile = new FileInfo(modelDirectory + modelFileName);
-
-                var yearMonth = date.ToString("yyyy-MM");
-                var day = date.ToString("dd");
-
-                var createdDirectory = $"{contractDirectory}/{yearMonth}/{day}";
-
-                using (FileStream originalFileStream = inputFile.OpenRead())
-                {
-                    if (!Directory.Exists(createdDirectory))
-                        Directory.CreateDirectory(createdDirectory);
-
-                    var outputFileName = Path.Combine(createdDirectory, fileName);
-                    using (FileStream outputFileStream = new FileStream(outputFileName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite))
-                    {
-                        await originalFileStream.CopyToAsync(outputFileStream);
-                    }
-                    return outputFileName;
-                }
+                await originalFileStream.CopyToAsync(outputFileStream);
+                await outputFileStream.FlushAsync();
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.StackTrace);
-                throw new Exception(ex.Message.ToString());
-            }
-            
+
+            return outputFileName;
         }
+
 
         private void ReplaceWithParagraphs(string filePath, string text)
         {
