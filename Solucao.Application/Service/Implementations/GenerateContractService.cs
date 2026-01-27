@@ -270,25 +270,36 @@ namespace Solucao.Application.Service.Implementations
             string fileName,
             DateTime date)
         {
-            var input = new FileInfo(Path.Combine(modelDirectory, modelFileName));
+            var inputPath = Path.Combine(modelDirectory, modelFileName);
 
-            var outputDir = Path.Combine(
-                contractDirectory,
-                date.ToString("yyyy-MM"),
-                date.ToString("dd"));
+            var yearMonth = date.ToString("yyyy-MM");
+            var day = date.ToString("dd");
+            var createdDirectory = Path.Combine(contractDirectory, yearMonth, day);
 
-            Directory.CreateDirectory(outputDir);
+            Directory.CreateDirectory(createdDirectory);
 
-            var output = Path.Combine(outputDir, fileName);
+            var outputPath = Path.Combine(createdDirectory, fileName);
 
-            using var inputStream = input.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
-            using var outputStream = new FileStream(output, FileMode.Create, FileAccess.Write, FileShare.None);
+            await using (var source = new FileStream(
+                inputPath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read))
+            {
+                await using (var destination = new FileStream(
+                    outputPath,
+                    FileMode.Create,
+                    FileAccess.Write,
+                    FileShare.None))
+                {
+                    await source.CopyToAsync(destination);
+                    await destination.FlushAsync(); // 🔥 MUITO IMPORTANTE
+                }
+            }
 
-            await inputStream.CopyToAsync(outputStream);
-            await outputStream.FlushAsync();
-
-            return output;
+            return outputPath;
         }
+
 
         private void ConvertDocxToPdf(string inputFile, string outputDir, DateTime date)
         {
