@@ -348,6 +348,11 @@ namespace Solucao.Application.Service.Implementations
 
         private async Task SearchCustomerValue(CalendarViewModel calendar)
         {
+            var useList = Environment.GetEnvironmentVariable("UseList");
+
+            if (useList == "S")
+                return;
+                
             var result = await clientRepository.GetEquipmentValueByClient(
                 calendar.ClientId,
                 calendar.EquipamentId,
