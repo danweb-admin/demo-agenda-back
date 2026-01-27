@@ -23,7 +23,6 @@ using Solucao.Application.Service.Interfaces;
 using Solucao.Application.Utils;
 using Calendar = Solucao.Application.Data.Entities.Calendar;
 
-
 namespace Solucao.Application.Service.Implementations
 {
     public class GenerateContractService : IGenerateContractService
@@ -34,587 +33,417 @@ namespace Solucao.Application.Service.Implementations
         private readonly DigitalSignatureRepository assinaturaRepository;
         private readonly ModelAttributesRepository modelAttributesRepository;
         private readonly IClientRepository clientRepository;
-        private CultureInfo cultureInfo = new CultureInfo("pt-BR");
 
+        private readonly CultureInfo cultureInfo = new CultureInfo("pt-BR");
 
-        public GenerateContractService(IMapper _mapper, CalendarRepository _calendarRepository, ModelRepository _modelRepository, IClientRepository _clientRepository, ModelAttributesRepository _modelAttributesRepository, DigitalSignatureRepository _assinaturaRepository)
+        public GenerateContractService(
+            IMapper mapper,
+            CalendarRepository calendarRepository,
+            ModelRepository modelRepository,
+            IClientRepository clientRepository,
+            ModelAttributesRepository modelAttributesRepository,
+            DigitalSignatureRepository assinaturaRepository)
         {
-            mapper = _mapper;
-            calendarRepository = _calendarRepository;
-            modelRepository = _modelRepository;
-            clientRepository = _clientRepository;
-            modelAttributesRepository = _modelAttributesRepository;
-            assinaturaRepository = _assinaturaRepository;
+            this.mapper = mapper;
+            this.calendarRepository = calendarRepository;
+            this.modelRepository = modelRepository;
+            this.clientRepository = clientRepository;
+            this.modelAttributesRepository = modelAttributesRepository;
+            this.assinaturaRepository = assinaturaRepository;
         }
 
-        public async Task<IEnumerable<CalendarViewModel>> GetAllByDayAndContractMade(DateTime date)
-        {
-            return mapper.Map<IEnumerable<CalendarViewModel>>(await calendarRepository.GetAllByDayAndConfirmed(date));
-        }
+        // =========================
+        // PUBLIC
+        // =========================
 
-        public async Task<byte[]> DownloadContract(Guid calendarId)
-        {
-
-            var calendar = await calendarRepository.GetById(calendarId);
-
-            if (!File.Exists(calendar.ContractPath))
-                throw new ContractNotFoundException("Contrato não encontrado.");
-
-            return await File.ReadAllBytesAsync(calendar.ContractPath);
-
-        }
-
-        public async Task<IEnumerable<CalendarViewModel>> BuscarLocacoes( Guid cliendId, Guid equipmentId, DateTime startDate, DateTime endDate)
-        {
-            return mapper.Map<IEnumerable<CalendarViewModel>>(await calendarRepository.GetAllByClient(cliendId, equipmentId, startDate,endDate));
-
-        }
-
-        public async Task<ValidationResult> GenerateMultipleContract(string ids)
-        {
-            var ids_ = ids.Split(',');
-
-            var listaLocacoes = await calendarRepository.GetAllById(ids_.Select(Guid.Parse).ToArray());
-
-            foreach (var item in ids_)
-            {
-                var request = new GenerateContractRequest
-                {
-                  CalendarId = Guid.Parse(item)
-                };
-                
-                var result = await GenerateContract(request, mapper.Map<IEnumerable<CalendarViewModel>>(listaLocacoes));
-         
-            }
-
-
-            return ValidationResult.Success;
-        }
-
-        public async Task<ValidationResult> GenerateContract(GenerateContractRequest request, IEnumerable<CalendarViewModel> listaLocacoes)
+        public async Task<ValidationResult> GenerateContract(
+            GenerateContractRequest request,
+            IEnumerable<CalendarViewModel> listaLocacoes)
         {
             var modelPath = Environment.GetEnvironmentVariable("ModelDocsPath");
             var contractPath = Environment.GetEnvironmentVariable("DocsPath");
             var useList = Environment.GetEnvironmentVariable("UseList");
 
-            var calendar = mapper.Map<CalendarViewModel>(await calendarRepository.GetById(request.CalendarId));
+            var calendar = mapper.Map<CalendarViewModel>(
+                await calendarRepository.GetById(request.CalendarId));
 
-            if (string.IsNullOrEmpty(calendar.Client.Cnpj))
-              calendar.Client.Document = FormatValue(calendar.Client.Cpf,"","CPF");
-            else 
-              calendar.Client.Document = FormatValue(calendar.Client.Cnpj,"","CNPJ");            
+            calendar.Client.Document = string.IsNullOrEmpty(calendar.Client.Cnpj)
+                ? FormatValue(calendar.Client.Cpf, "", "CPF")
+                : FormatValue(calendar.Client.Cnpj, "", "CNPJ");
 
-            calendar.RentalTime = CalculateMinutes(calendar.StartTime.Value, calendar.EndTime.Value);
+            calendar.RentalTime = CalculateMinutes(
+                calendar.StartTime.Value,
+                calendar.EndTime.Value);
+
             await SearchCustomerValue(calendar);
-            calendar.TotalValue = calendar.Value + calendar.Freight - calendar.Discount + calendar.Additional1;
-            if (listaLocacoes == null)
-            {
-                var list = new List<CalendarViewModel>
-                {
-                  calendar
-                };
-                listaLocacoes = mapper.Map<List<CalendarViewModel>>( list);
-            }
-            var locacoesOrdenadas = listaLocacoes.OrderByDescending(c => c.StartTime).ToList();
+
+            calendar.TotalValue =
+                calendar.Value + calendar.Freight - calendar.Discount + calendar.Additional1;
+
+            listaLocacoes ??= new List<CalendarViewModel> { calendar };
+
+            var locacoesOrdenadas = listaLocacoes
+                .OrderBy(c => c.StartTime)
+                .ToList();
 
             calendar.ListaLocacoes = string.Join("\n",
                 locacoesOrdenadas.Select(c =>
-                    $"{c.StartTime:dd/MM/yyyy} – das {c.StartTime:HH:mm} às {c.EndTime:HH:mm}"
-                )
+                    $"{c.StartTime:dd/MM/yyyy} – das {c.StartTime:HH:mm} às {c.EndTime:HH:mm}")
             );
 
-            var datasLocacao = listaLocacoes.Select(x => x.Date.Date).ToList();
+            var datasLocacao = locacoesOrdenadas.Select(x => x.Date.Date).ToList();
 
-            var model = await modelRepository.GetByEquipament(calendar.EquipamentId);
-
-            if (model == null)
-                throw new ModelNotFoundException("Modelo de contrato para esse equipamento não encontrado.");
+            var model = await modelRepository.GetByEquipament(calendar.EquipamentId)
+                ?? throw new ModelNotFoundException("Modelo de contrato não encontrado.");
 
             var attributes = await modelAttributesRepository.GetAll();
 
-            var contractFileName = FormatNameFile(calendar.Client.Name, calendar.Equipament.Name, calendar.Date);
+            var contractFileName = FormatNameFile(
+                calendar.Client.Name,
+                calendar.Equipament.Name,
+                calendar.Date);
 
-            var copiedFile = await CopyFileStream(modelPath, contractPath, model.ModelFileName, contractFileName, calendar.Date);
+            var copiedFile = await CopyFileStream(
+                modelPath,
+                contractPath,
+                model.ModelFileName,
+                contractFileName,
+                calendar.Date);
 
-            var result = ExecuteReplace(copiedFile, attributes, calendar);
-
-            if (result)
+            // =========================
+            // 🔥 OPENXML – ABERTURA ÚNICA
+            // =========================
+            using (var doc = WordprocessingDocument.Open(copiedFile, true))
             {
-                calendar.ContractPath = copiedFile;
-                calendar.UpdatedAt = DateTime.Now;
-                calendar.FileNameDocx = contractFileName;
-                calendar.FileNamePdf = contractFileName.Replace("docx","pdf");
-                calendar.ContractMade = true;
-                calendar.Status = "1";
+                ExecuteReplace(doc, attributes, calendar);
+                AddMultipleDatesBlock(doc, datasLocacao);
+                ReplaceWithParagraphs(doc, calendar.ListaLocacoes);
 
-                AddMultipleDatesBlock(copiedFile,datasLocacao);
-
-                ReplaceWithParagraphs(copiedFile,calendar.ListaLocacoes);
-
-                ConvertDocxToPdf(copiedFile, contractPath, calendar.Date);
-
-                await calendarRepository.UpdateContract(mapper.Map<Calendar>(calendar));
-
-                if (useList == "S")
-                    await AddDigitalSignature(calendar.Id.Value, contractFileName);
-
-                return ValidationResult.Success;
+                doc.MainDocumentPart.Document.Save();
             }
 
-            return new ValidationResult("Erro para gerar o contrato");
+            // =========================
+            // PDF
+            // =========================
+            ConvertDocxToPdf(copiedFile, contractPath, calendar.Date);
+
+            calendar.ContractPath = copiedFile;
+            calendar.FileNameDocx = contractFileName;
+            calendar.FileNamePdf = contractFileName.Replace(".docx", ".pdf");
+            calendar.ContractMade = true;
+            calendar.UpdatedAt = DateTime.Now;
+            calendar.Status = "1";
+
+            await calendarRepository.UpdateContract(mapper.Map<Calendar>(calendar));
+
+            if (useList == "S")
+                await AddDigitalSignature(calendar.Id.Value, calendar.FileNamePdf);
+
+            return ValidationResult.Success;
         }
 
-        private string FormatNameFile(string locatarioName, string equipamentName, DateTime date)
+        // =========================
+        // OPENXML HELPERS
+        // =========================
+
+        private void ExecuteReplace(
+            WordprocessingDocument doc,
+            IEnumerable<ModelAttributes> attributes,
+            CalendarViewModel calendar)
         {
-            var _locatarioName = locatarioName.Replace(" ", "");
-            var _equipamentName = equipamentName.Replace(" ", "");
-            var _date = date.ToString("dd-MM-yyyy");
+            string docText;
 
-            return $"{_locatarioName}-{_equipamentName}-{_date}.docx";
-        }
+            using (var sr = new StreamReader(doc.MainDocumentPart.GetStream()))
+                docText = sr.ReadToEnd();
 
-        private async Task<string> CopyFileStream(string modelDirectory, string contractDirectory, string modelFileName, string fileName, DateTime date)
-        {
-            FileInfo inputFile = new FileInfo(Path.Combine(modelDirectory, modelFileName));
-
-            var yearMonth = date.ToString("yyyy-MM");
-            var day = date.ToString("dd");
-
-            var createdDirectory = Path.Combine(contractDirectory, yearMonth, day);
-
-            if (!Directory.Exists(createdDirectory))
-                Directory.CreateDirectory(createdDirectory);
-
-            var outputFileName = Path.Combine(createdDirectory, fileName);
-
-            using (var originalFileStream = inputFile.Open(FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var outputFileStream = new FileStream(outputFileName, FileMode.Create, FileAccess.Write,FileShare.None)) // 🔴 ESSENCIAL
+            foreach (var item in attributes)
             {
-                await originalFileStream.CopyToAsync(outputFileStream);
-                await outputFileStream.FlushAsync();
+                var value = GetPropertieValue(calendar, item.TechnicalAttribute, item.AttributeType);
+                if (string.IsNullOrEmpty(value)) continue;
+
+                docText = Regex.Replace(docText, item.FileAttribute.Trim(), value);
             }
 
-            return outputFileName;
+            using (var sw = new StreamWriter(doc.MainDocumentPart.GetStream(FileMode.Create)))
+                sw.Write(docText);
         }
 
-
-        private void ReplaceWithParagraphs(string filePath, string text)
+        private void ReplaceWithParagraphs(WordprocessingDocument doc, string text)
         {
-            using var doc = WordprocessingDocument.Open(filePath, true);
             var body = doc.MainDocumentPart.Document.Body;
 
-            var paragraph = body
-                .Descendants<Paragraph>()
+            var placeholder = body.Descendants<Paragraph>()
                 .FirstOrDefault(p => p.InnerText.Contains("#ListaLocacoes"));
 
-            if (paragraph == null)
-                return;
-
-            // Remove o texto do placeholder
-            paragraph.RemoveAllChildren<Run>();
+            if (placeholder == null) return;
 
             foreach (var line in text.Split('\n'))
             {
-                var newParagraph = new Paragraph(
-                    new ParagraphProperties(
-                        new SpacingBetweenLines
-                        {
-                            Line = "200",    
-                            Before = "120",  
-                            After = "120"    
-                        }
+                body.InsertAfter(
+                    new Paragraph(
+                        new ParagraphProperties(
+                            new SpacingBetweenLines
+                            {
+                                Line = "260",
+                                Before = "20",
+                                After = "20"
+                            }),
+                        new Run(new Text(line) { Space = SpaceProcessingModeValues.Preserve })
                     ),
-                    new Run(
-                        new Text(line)
-                        {
-                            Space = SpaceProcessingModeValues.Preserve
-                        }
-                    )
+                    placeholder
                 );
-
-                body.InsertAfter(newParagraph, paragraph);
             }
 
-            // Remove o parágrafo original do placeholder
-            paragraph.Remove();
-
-            doc.MainDocumentPart.Document.Save();
-
+            placeholder.Remove();
         }
 
-
-        public void AddMultipleDatesBlock(string filePath, List<DateTime> dates)
+        private void AddMultipleDatesBlock(WordprocessingDocument doc, List<DateTime> dates)
         {
-            using var doc = WordprocessingDocument.Open(filePath, true);
             var body = doc.MainDocumentPart.Document.Body;
 
-            var placeholderText = body
-                .Descendants<Text>()
+            var placeholder = body.Descendants<Text>()
                 .FirstOrDefault(t => t.Text.Contains("#BLOCO_LOCACOES_MULTIPLAS#"));
 
-            if (placeholderText == null)
-                return;
-
-            if (dates.Count() == 1)
+            if (placeholder == null || dates.Count <= 1)
             {
-                // Remove o parágrafo original do placeholder
-                placeholderText.Remove();
+                placeholder?.Remove();
                 return;
             }
-              
 
-            var paragraph = placeholderText.Ancestors<Paragraph>().First();
-            placeholderText.Text = "";
+            var paragraph = placeholder.Ancestors<Paragraph>().First();
+            placeholder.Text = "";
 
-            var table = CreateMultipleDatesTable(dates);
-
-            paragraph.InsertAfterSelf(table);
-
-            doc.MainDocumentPart.Document.Save();
+            paragraph.InsertAfterSelf(CreateMultipleDatesTable(dates));
         }
 
-        private Table CreateMultipleDatesTable(List<DateTime> dates)
+        private Table CreateMultipleDatesTable(IEnumerable<DateTime> dates)
         {
-            DateTime ultimaData = dates.OrderBy(d => d).Last();
-
-            var culturaPtBr = new CultureInfo("pt-BR");
-
-            string mesAno = ultimaData.ToString("MMM/yy", culturaPtBr).ToUpper(); 
-            
             var table = new Table();
 
-            // Bordas
             table.AppendChild(new TableProperties(
                 new TableBorders(
-                    new TopBorder { Val = BorderValues.Single, Size = 8 },
-                    new BottomBorder { Val = BorderValues.Single, Size = 8 },
-                    new LeftBorder { Val = BorderValues.Single, Size = 8 },
-                    new RightBorder { Val = BorderValues.Single, Size = 8 }
+                    new TopBorder { Val = BorderValues.Single, Size = 4 },
+                    new BottomBorder { Val = BorderValues.Single, Size = 4 },
+                    new LeftBorder { Val = BorderValues.Single, Size = 4 },
+                    new RightBorder { Val = BorderValues.Single, Size = 4 },
+                    new InsideHorizontalBorder { Val = BorderValues.Single, Size = 4 },
+                    new InsideVerticalBorder { Val = BorderValues.Single, Size = 4 }
                 )
             ));
 
-            // TÍTULO
-            table.Append(CreateRow(
-                  $"Contrato referente locações até {mesAno}:",
-                bold: true,
-                center: true
-            ));
+            // Cabeçalho
+            table.Append(CreateRow("Data", header: true));
 
-            // DATAS
-            var formattedDates = string.Join("; ",
-                dates
-                    .OrderBy(d => d)
-                    .Select(d => d.ToString("dd/MM/yy"))
-            );
-
-            table.Append(CreateRow(
-                formattedDates,
-                underline: false,
-                center: true
-            ));
+            foreach (var date in dates.OrderBy(d => d))
+            {
+                table.Append(CreateRow(date.ToString("dd/MM/yyyy")));
+            }
 
             return table;
         }
 
-        private TableRow CreateRow(string text, bool bold = false, bool underline = false, bool center = false)
+        private TableRow CreateRow(string value, bool header = false)
         {
-            var runProps = new RunProperties();
+            return new TableRow(CreateCell(value, header));
+        }
 
-            if (bold) runProps.Append(new Bold());
-            if (underline) runProps.Append(new Underline { Val = UnderlineValues.Single });
+        private TableCell CreateCell(string text, bool bold = false)
+        {
+            var run = new Run(new Text(text));
 
-            var paragraphProps = new ParagraphProperties();
-            if (center)
-                paragraphProps.Append(new Justification { Val = JustificationValues.Center });
+            if (bold)
+                run.RunProperties = new RunProperties(new Bold());
 
-            var paragraph = new Paragraph(
-                paragraphProps,
-                new Run(runProps, new Text(text) { Space = SpaceProcessingModeValues.Preserve })
-            );
-
-            var cell = new TableCell(paragraph);
-            cell.Append(new TableCellProperties(
-                new TableCellMargin(
-                    new TopMargin { Width = "50", Type = TableWidthUnitValues.Dxa },
-                    new BottomMargin { Width = "50", Type = TableWidthUnitValues.Dxa },
-                    new LeftMargin { Width = "200", Type = TableWidthUnitValues.Dxa },
-                    new RightMargin { Width = "200", Type = TableWidthUnitValues.Dxa }
-                )
-            ));
-
-            return new TableRow(cell);
+            return new TableCell(new Paragraph(run));
         }
 
 
 
-        private bool ExecuteReplace(string copiedFile, IEnumerable<ModelAttributes> attributes, CalendarViewModel calendar)
+        // =========================
+        // FILE / PDF
+        // =========================
+
+        private async Task<string> CopyFileStream(
+            string modelDirectory,
+            string contractDirectory,
+            string modelFileName,
+            string fileName,
+            DateTime date)
         {
-            try
+            var input = new FileInfo(Path.Combine(modelDirectory, modelFileName));
+
+            var outputDir = Path.Combine(
+                contractDirectory,
+                date.ToString("yyyy-MM"),
+                date.ToString("dd"));
+
+            Directory.CreateDirectory(outputDir);
+
+            var output = Path.Combine(outputDir, fileName);
+
+            using var inputStream = input.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
+            using var outputStream = new FileStream(output, FileMode.Create, FileAccess.Write, FileShare.None);
+
+            await inputStream.CopyToAsync(outputStream);
+            await outputStream.FlushAsync();
+
+            return output;
+        }
+
+        private void ConvertDocxToPdf(string inputFile, string outputDir, DateTime date)
+        {
+            var soffice = Environment.GetEnvironmentVariable("PathSoffice");
+
+            var targetDir = Path.Combine(
+                outputDir,
+                date.ToString("yyyy-MM"),
+                date.ToString("dd"));
+
+            var process = new Process
             {
-                using (WordprocessingDocument wordDoc = WordprocessingDocument.Open(copiedFile, true))
+                StartInfo = new ProcessStartInfo
                 {
-                    string docText = null;
-                    using (StreamReader sr = new StreamReader(wordDoc.MainDocumentPart.GetStream()))
-                        docText = sr.ReadToEnd();
-
-                    foreach (var item in attributes)
-                    {
-                        Regex regexText = new Regex(item.FileAttribute.Trim());
-                        var valueItem = GetPropertieValue(calendar, item.TechnicalAttribute, item.AttributeType);
-                        if (valueItem == null)
-                          continue;
-                        docText = regexText.Replace(docText, valueItem);
-                    }
-                    
-                    using (StreamWriter sw = new StreamWriter(wordDoc.MainDocumentPart.GetStream(FileMode.Create)))
-                        sw.Write(docText);
-
+                    FileName = $"{soffice}soffice",
+                    Arguments = $"--headless --convert-to pdf --outdir \"{targetDir}\" \"{inputFile}\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
                 }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.StackTrace);
-                return false;
-            }
+            };
 
+            process.Start();
+            process.WaitForExit();
         }
 
-        private string GetPropertieValue(object obj, string propertieName, string attrType)
+        // =========================
+        // UTIL
+        // =========================
+
+        private string FormatNameFile(string client, string equip, DateTime date) =>
+            $"{client.Replace(" ", "")}-{equip.Replace(" ", "")}-{date:dd-MM-yyyy}.docx";
+
+        private int CalculateMinutes(DateTime start, DateTime end) =>
+            (int)(end - start).TotalMinutes;
+
+        private string GetPropertieValue(object obj, string prop, string type)
         {
-            try
+            foreach (var p in prop.Split('.'))
             {
-              // Dividir o nome da propriedade para acessar propriedades aninhadas
-                  string[] properties = propertieName.Split('.');
-
-                  object value = obj;
-
-                  // Iterar sobre as propriedades
-                  foreach (var prop in properties)
-                  {
-                      // Obter tipo do objeto atual
-                      Type type = value.GetType();
-
-                      // Obter propriedade pelo nome
-                      var propInfo = type.GetProperty(prop);
-
-                      // Se a propriedade não existir, retornar null
-                      if (propInfo == null)
-                      {
-                          return null;
-                      }
-
-                      // Obter valor da propriedade
-                      value = propInfo.GetValue(value);
-                  }
-
-                  if (value == null)
-                    return string.Empty;
-
-                  // Converter valor para string (assumindo que a propriedade é do tipo string)
-                  return FormatValue(value.ToString(), attrType, propertieName);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"propertieName: {propertieName}");
-                Console.WriteLine(ex);
-                throw;
-              
-            }
-            
-        }
-
-        private string FormatValue(string value, string attrType, string propertie)
-        {
-            switch (attrType)
-            {
-                case "datetime":
-                    return DateTime.Parse(value).ToString("dd/MM/yyyy");
-                case "datetime_extenso":
-                    var monthDay = DateTime.Parse(value).ToString("M", cultureInfo);
-                    var year = DateTime.Parse(value).ToString("yyyy", cultureInfo);
-
-                    return $"{monthDay} de {year}";
-                case "time":
-                    return DateTime.Parse(value).ToString("HH:mm");
-                case "decimal":
-                    return decimal.Parse(value).ToString("N2", cultureInfo);
-                case "decimal_extenso":
-                    return decimalExtenso(value);
-                case "time_extenso":
-                    return timeExtenso(value);
-                default:
-                    if (propertie.ToUpper().Contains("CPF"))
-                        return Regex.Replace(value, @"^(\d{3})(\d{3})(\d{3})(\d{2})$", "$1.$2.$3-$4");
-                    if (propertie.ToUpper().Contains("CNPJ"))
-                        return Regex.Replace(value, @"^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$", "$1.$2.$3/$4-$5");
-                    if (propertie.ToUpper().Contains("ZIPCODE"))
-                        return Regex.Replace(value, @"^(\d{5})(\d{3})$", "$1-$2");
-                    if (propertie.ToUpper().Contains("CELL"))
-                        return FormatCelular(value);
-                    return value;
-            }
-        }
-
-        private string FormatCelular(string input)
-        {
-            // sempre 11 dígitos: 2 DDD + 9 número
-            if (input.Length != 11) return input;
-            return $"({input.Substring(0, 2)}) {input.Substring(2, 5)}-{input.Substring(7, 4)}";
-        }
-
-        private string decimalExtenso(string value)
-        {
-            var decimalSplit = decimal.Parse(value).ToString("n2").Split('.');
-            var part1 = long.Parse(decimalSplit[0].Replace(",", "")).ToWords(cultureInfo).ToTitleCase(TitleCase.First);
-            var part2 = int.Parse(decimalSplit[1]).ToWords(cultureInfo);
-
-            if (part2 == "zero")
-                return $"{part1} reais";
-            return $"{part1} reais e {part2} centavos";
-        }
-
-        private string timeExtenso(string value)
-        {
-            var minutesTotal = int.Parse(value);
-
-            int hours = minutesTotal / 60;
-            int minutes = minutesTotal % 60;
-
-            string result = "";
-
-            if (hours == 0)
-            {
-                if (minutes > 0)
-                    result += $"{minutes} {(minutes == 1 ? "minuto" : "minutos")}";
-                return result;
+                var info = obj.GetType().GetProperty(p);
+                if (info == null) return null;
+                obj = info.GetValue(obj);
             }
 
-            result = $"{hours} {(hours == 1 ? "hora" : "horas")}";
+            return obj == null ? "" : FormatValue(obj.ToString(), type, prop);
+        }
 
-            if (minutes > 0)
-                result += $" e {minutes} {(minutes == 1 ? "minuto" : "minutos")}";
-
-            return result;
+        private string FormatValue(string value, string type, string prop)
+        {
+            return type switch
+            {
+                "datetime" => DateTime.Parse(value).ToString("dd/MM/yyyy"),
+                "decimal" => decimal.Parse(value).ToString("N2", cultureInfo),
+                _ => value
+            };
         }
 
         private async Task SearchCustomerValue(CalendarViewModel calendar)
         {
-            var useList = Environment.GetEnvironmentVariable("UseList");
+            var result = await clientRepository.GetEquipmentValueByClient(
+                calendar.ClientId,
+                calendar.EquipamentId,
+                Utils.Helpers.FormatTime((decimal)(calendar.EndTime - calendar.StartTime).Value.TotalHours));
 
-            if (useList == "S")
-                return;
+            if (result == 0)
+                throw new CalendarNoValueException("Valor não encontrado.");
 
-            TimeSpan difference = calendar.EndTime.Value - calendar.StartTime.Value;
-            var rentalTime = difference.TotalHours;
-
-            var rentalTimeString = Utils.Helpers.FormatTime((decimal)rentalTime);
-
-            var result = await clientRepository.GetEquipmentValueByClient(calendar.ClientId, calendar.EquipamentId, rentalTimeString);
-
-            if (result != 0)
-            {
-
-                var specs = await clientRepository.GetSpecsByClient(calendar.ClientId);
-                if (specs.Count() > 0)
-                    calendar.Value = ValuesBySpecification(calendar, specs, result);
-                else
-                    calendar.Value = calendar.ValueWithoutSpec = result;
-                return;
-            }
-
-            throw new CalendarNoValueException("Não foi encontrado o valor para a Locação no cadastro do cliente");
-
+            calendar.Value = result;
         }
 
-        private decimal ValuesBySpecification(CalendarViewModel calendar, IEnumerable<ClientSpecification> specifications, decimal valueWithoutSpec)
+        private async Task AddDigitalSignature(Guid calendarId, string pdfFile)
         {
-            TimeSpan difference = calendar.EndTime.Value - calendar.StartTime.Value;
-            var rentalTime = difference.TotalHours;
+            var pasta = Environment.GetEnvironmentVariable("IdPasta");
+            var resp = Environment.GetEnvironmentVariable("IdResponsavel");
 
-            calendar.ValueWithoutSpec = valueWithoutSpec;
-            var specs = calendar.CalendarSpecifications.Where(x => x.Active);
+            if (string.IsNullOrEmpty(pasta) || string.IsNullOrEmpty(resp)) return;
 
-            foreach (var spec in specs)
+            await assinaturaRepository.Add(new DigitalSignature
             {
-                foreach (var item in specifications)
+                CalendarId = calendarId,
+                IdPasta = Guid.Parse(pasta),
+                IdResponsavel = Guid.Parse(resp),
+                NomeProcesso = pdfFile,
+                Status = "pending",
+                CreatedAt = DateTime.Now
+            });
+        }
+
+        public async Task<IEnumerable<CalendarViewModel>> GetAllByDayAndContractMade(DateTime date)
+        {
+            var calendars = await calendarRepository.GetAllByDayAndConfirmed(date);
+            return mapper.Map<IEnumerable<CalendarViewModel>>(calendars);
+        }
+
+
+        public async Task<ValidationResult> GenerateMultipleContract(string ids)
+        {
+            if (string.IsNullOrWhiteSpace(ids))
+                return new ValidationResult("Nenhuma locação informada.");
+
+            var idsArray = ids
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(Guid.Parse)
+                .ToArray();
+
+            var listaLocacoes = await calendarRepository.GetAllById(idsArray);
+
+            if (!listaLocacoes.Any())
+                return new ValidationResult("Nenhuma locação encontrada.");
+
+            var listaViewModel = mapper.Map<IEnumerable<CalendarViewModel>>(listaLocacoes);
+
+            // ⚠️ IMPORTANTE: processar SEQUENCIALMENTE
+            foreach (var locacao in listaViewModel)
+            {
+                var request = new GenerateContractRequest
                 {
-                    if (item.SpecificationId == spec.SpecificationId)
-                    {
-                        if (rentalTime <= item.Hours || item.Hours == 0)
-                        {
-                            calendar.Additional1 = item.Value;
-                            return valueWithoutSpec;
-                        }
-                    }
-                }
+                    CalendarId = locacao.Id.Value
+                };
+
+                var result = await GenerateContract(request, listaViewModel);
+
+                if (result != ValidationResult.Success)
+                    return result;
             }
 
-            return valueWithoutSpec;
+            return ValidationResult.Success;
         }
 
-        private int CalculateMinutes(DateTime startTime, DateTime endTime)
+
+        public async Task<IEnumerable<CalendarViewModel>> BuscarLocacoes(
+        Guid cliendId,
+        Guid equipmentId,
+        DateTime startDate,
+        DateTime endDate)
         {
-            if (endTime < startTime)
-                throw new ArgumentException("A data final deve ser maior ou igual à data inicial.");
+            var calendars = await calendarRepository
+                .GetAllByClient(cliendId, equipmentId, startDate, endDate);
 
-            TimeSpan difference = endTime - startTime;
-            return (int)difference.TotalMinutes;
+            return mapper.Map<IEnumerable<CalendarViewModel>>(calendars);
         }
 
-        private void ConvertDocxToPdf(string inputFilePath, string outputDirectory, DateTime date)
+
+        public async Task<byte[]> DownloadContract(Guid calendarId)
         {
-            try
-            {
-                var pathSoffice = Environment.GetEnvironmentVariable("PathSoffice");
+            var calendar = await calendarRepository.GetById(calendarId);
 
-                var yearMonth = date.ToString("yyyy-MM");
-                var day = date.ToString("dd");
+            if (calendar == null || string.IsNullOrEmpty(calendar.ContractPath))
+                throw new ContractNotFoundException("Contrato não encontrado.");
 
-                var createdDirectory = $"{outputDirectory}/{yearMonth}/{day}";
+            if (!File.Exists(calendar.ContractPath))
+                throw new ContractNotFoundException("Arquivo do contrato não existe no servidor.");
 
-                var process = new Process();
-                process.StartInfo.FileName = $"{pathSoffice}soffice";
-                process.StartInfo.Arguments = $"--headless --convert-to pdf --outdir \"{createdDirectory}\" \"{inputFilePath}\"";
-                process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.UseShellExecute = false;
-                process.Start();
-                process.WaitForExit();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.StackTrace);
-            }
-            
+            return await File.ReadAllBytesAsync(calendar.ContractPath);
         }
 
-        private async Task AddDigitalSignature(Guid calendarId, string inputFilePath)
-        {
-            var idPasta = Environment.GetEnvironmentVariable("IdPasta");
-            var idResponsavel = Environment.GetEnvironmentVariable("IdResponsavel");
-
-            if (string.IsNullOrEmpty(idPasta) || string.IsNullOrEmpty(idResponsavel))
-              return;
-
-            Console.WriteLine($"idPasta: {idPasta}");
-            Console.WriteLine($"idResponsavel: {idResponsavel}");
-
-            var assinatura = new DigitalSignature();
-            
-            assinatura.Id = new Guid();
-            assinatura.CalendarId = calendarId;
-            assinatura.IdPasta = Guid.Parse(idPasta);
-            assinatura.IdResponsavel = Guid.Parse(idResponsavel);
-            assinatura.NomeProcesso = inputFilePath.Replace(".docx", ".pdf");
-            assinatura.Status = "pending";
-            assinatura.CreatedAt = DateTime.Now;
-
-            
-
-            await assinaturaRepository.Add(assinatura);
-        }
-
-    
-  }
+    }
 }
-
