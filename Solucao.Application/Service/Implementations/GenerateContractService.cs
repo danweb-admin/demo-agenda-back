@@ -118,6 +118,11 @@ namespace Solucao.Application.Service.Implementations
                 ExecuteReplace(doc, attributes, calendar);
                 AddMultipleDatesBlock(doc, datasLocacao);
                 ReplaceWithParagraphs(doc, calendar.ListaLocacoes);
+                var obsFiltradas = ExtrairObservacoesPorEquipamento(
+                    calendar.Client.EquipamentValues,
+                    calendar.Equipament.Name
+                );
+                AddObservacoesBlock(doc,obsFiltradas);
 
                 doc.MainDocumentPart.Document.Save();
             }
@@ -197,6 +202,41 @@ namespace Solucao.Application.Service.Implementations
             placeholder.Remove();
         }
 
+        private List<string> ExtrairObservacoesPorEquipamento(string textoCompleto, string equipamento)
+        {
+            if (string.IsNullOrWhiteSpace(textoCompleto))
+                return new List<string>();
+
+            var linhas = textoCompleto
+                .Replace("\r", "")
+                .Split('\n')
+                .ToList();
+
+            var resultado = new List<string>();
+
+            bool capturando = false;
+
+            foreach (var linha in linhas)
+            {
+                var trimmed = linha.Trim();
+
+                // achou o equipamento
+                if (trimmed.StartsWith("->"))
+                {
+                    capturando = trimmed
+                        .Equals($"->{equipamento}", StringComparison.OrdinalIgnoreCase);
+
+                    continue;
+                }
+
+                if (capturando && !string.IsNullOrWhiteSpace(trimmed))
+                    resultado.Add(trimmed);
+            }
+
+            return resultado;
+        }
+
+
         private void AddMultipleDatesBlock(WordprocessingDocument doc, List<DateTime> dates)
         {
             var body = doc.MainDocumentPart.Document.Body;
@@ -215,6 +255,75 @@ namespace Solucao.Application.Service.Implementations
 
             paragraph.InsertAfterSelf(CreateMultipleDatesTable(dates));
         }
+
+        private void AddObservacoesBlock(WordprocessingDocument wordDoc,IEnumerable<string> observacoes)
+        {
+            if (!observacoes.Any())
+                return;
+
+            var body = wordDoc.MainDocumentPart.Document.Body;
+
+            var paragraph = body
+                .Descendants<Paragraph>()
+                .FirstOrDefault(p => p.InnerText.Contains("#BLOCO_OBSERVACOES#"));
+
+            if (paragraph == null)
+                return;
+
+            foreach (var obs in observacoes.Reverse())
+            {
+                paragraph.InsertAfterSelf(CreateParagraph(obs));
+            }
+
+            paragraph.Remove();
+
+            wordDoc.MainDocumentPart.Document.Save();
+        }
+
+
+        private Paragraph CreateParagraphObs(string text, bool bold = false)
+        {
+            var runProps = new RunProperties();
+
+            if (bold)
+                runProps.Append(new Bold());
+
+            return new Paragraph(
+                new ParagraphProperties(
+                    new SpacingBetweenLines
+                    {
+                        After = "0",
+                        Before = "0",
+                        Line = "200"
+                    }
+                ),
+                new Run(
+                    runProps,
+                    new Text(text) { Space = SpaceProcessingModeValues.Preserve }
+                )
+            );
+        }
+
+
+
+        
+
+        private Paragraph CreateParagraph(string text, bool bold = false)
+        {
+            var runProps = new RunProperties();
+
+            if (bold)
+                runProps.Append(new Bold());
+
+            return new Paragraph(
+                new Run(
+                    runProps,
+                    new Text(text) { Space = SpaceProcessingModeValues.Preserve }
+                )
+            );
+        }
+
+
 
         private Table CreateMultipleDatesTable(IEnumerable<DateTime> dates)
         {
