@@ -75,7 +75,7 @@ namespace Solucao.Application.Service.Implementations
                 calendar.StartTime.Value,
                 calendar.EndTime.Value);
 
-            await SearchCustomerValue(calendar);
+            //await SearchCustomerValue(calendar);
 
             calendar.TotalValue =
                 calendar.Value + calendar.Freight - calendar.Discount + calendar.Additional1;
@@ -122,6 +122,8 @@ namespace Solucao.Application.Service.Implementations
                     calendar.Client.EquipamentValues,
                     calendar.Equipament.Name
                 );
+                obsFiltradas.Add(calendar.Note);
+
                 AddObservacoesBlock(doc,obsFiltradas);
 
                 doc.MainDocumentPart.Document.Save();
@@ -164,9 +166,9 @@ namespace Solucao.Application.Service.Implementations
             foreach (var item in attributes)
             {
                 var value = GetPropertieValue(calendar, item.TechnicalAttribute, item.AttributeType);
-                if (string.IsNullOrEmpty(value)) continue;
+                //if (string.IsNullOrEmpty(value)) continue;
 
-                docText = Regex.Replace(docText, item.FileAttribute.Trim(), value);
+                docText = Regex.Replace(docText, item.FileAttribute.Trim(), value ?? "" );
             }
 
             using (var sw = new StreamWriter(doc.MainDocumentPart.GetStream(FileMode.Create)))
