@@ -14,7 +14,7 @@
   {
       [Route("api/v1/generate-contract")]
       [ApiController]
-      //[Authorize]
+      [Authorize]
       public class GenerateContractController : ControllerBase
 	    {
           private readonly IGenerateContractService service;
@@ -48,14 +48,17 @@
               }
               catch (ModelNotFoundException ex)
               {
+			      Console.WriteLine(ex);
                   return BadRequest(ex.Message);
               }
               catch (CalendarNoValueException ex)
               {
+			  	  Console.WriteLine(ex);
                   return BadRequest(ex.Message);
               }
               catch (Exception ex)
               {
+			  	  Console.WriteLine(ex);
                   return StatusCode(StatusCodes.Status500InternalServerError, ex);
               }
 
