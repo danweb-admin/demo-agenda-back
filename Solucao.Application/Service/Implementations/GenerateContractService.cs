@@ -241,21 +241,26 @@ namespace Solucao.Application.Service.Implementations
 
         private void AddMultipleDatesBlock(WordprocessingDocument doc, List<DateTime> dates)
         {
-            var body = doc.MainDocumentPart.Document.Body;
+            try {
+                var body = doc.MainDocumentPart.Document.Body;
 
-            var placeholder = body.Descendants<Text>()
-                .FirstOrDefault(t => t.Text.Contains("#BLOCO_LOCACOES_MULTIPLAS#"));
+                var placeholder = body.Descendants<Text>()
+                    .FirstOrDefault(t => t.Text.Contains("#BLOCO_LOCACOES_MULTIPLAS#"));
+    
+                if (placeholder == null || dates.Count <= 1)
+                {
+                    placeholder?.Remove();
+                    return;
+                }
+    
+                var paragraph = placeholder.Ancestors<Paragraph>().First();
+                placeholder.Text = "";
 
-            if (placeholder == null || dates.Count <= 1)
-            {
-                placeholder?.Remove();
-                return;
+                paragraph.InsertAfterSelf(CreateMultipleDatesTable(dates));
+            }catch(Exception ex) {
+                Console.WriteLine("AddMultipleDatesBlock: " + ex)
             }
-
-            var paragraph = placeholder.Ancestors<Paragraph>().First();
-            placeholder.Text = "";
-
-            paragraph.InsertAfterSelf(CreateMultipleDatesTable(dates));
+            
         }
 
         private void AddObservacoesBlock(WordprocessingDocument wordDoc,IEnumerable<string> observacoes)
