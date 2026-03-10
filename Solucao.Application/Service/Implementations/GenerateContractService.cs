@@ -258,7 +258,7 @@ namespace Solucao.Application.Service.Implementations
 
                 paragraph.InsertAfterSelf(CreateMultipleDatesTable(dates));
             }catch(Exception ex) {
-                Console.WriteLine("AddMultipleDatesBlock: " + ex)
+                Console.WriteLine("AddMultipleDatesBlock: " + ex);
             }
             
         }
