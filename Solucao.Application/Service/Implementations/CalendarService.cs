@@ -122,6 +122,9 @@ namespace Solucao.Application.Service.Implementations
                 calendar.EndTime = null;
                 calendar.UserId = user;
 
+                if (calendar.ContractMade)
+                    calendar.ContractMade = true;
+
                 if (!string.IsNullOrEmpty(calendar.StartTime1))
                 {
                     var start = calendar.Date.ToString("yyyy-MM-dd") + " " + calendar.StartTime1.Replace(":", "").Insert(2, ":");
