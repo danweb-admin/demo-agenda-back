@@ -119,7 +119,7 @@ namespace Solucao.Application.Service.Implementations
                 AddMultipleDatesBlock(doc, datasLocacao);
                 ReplaceWithParagraphs(doc, calendar.ListaLocacoes);
                 var obsFiltradas = ExtrairObservacoesPorEquipamento(
-                    calendar.Client.EquipamentValues,
+                    calendar.Client,
                     calendar.Equipament.Name
                 );
                 obsFiltradas.Add(calendar.Note);
@@ -204,8 +204,10 @@ namespace Solucao.Application.Service.Implementations
             placeholder.Remove();
         }
 
-        private List<string> ExtrairObservacoesPorEquipamento(string textoCompleto, string equipamento)
+        private List<string> ExtrairObservacoesPorEquipamento(ClientViewModel cliente, string equipamento)
         {
+            var textoCompleto = cliente.EquipamentValues;
+
             if (string.IsNullOrWhiteSpace(textoCompleto))
                 return new List<string>();
 
@@ -215,6 +217,36 @@ namespace Solucao.Application.Service.Implementations
                 .ToList();
 
             var resultado = new List<string>();
+
+            var arCondicionado = "";
+            var transformador = "";
+            var tomada220 = "";
+            var escada = "";
+
+            if (cliente.HasAirConditioning.HasValue)
+              arCondicionado = cliente.HasAirConditioning.Value ? "Sim" : "Não";
+            else
+              arCondicionado = "Não";
+
+            if (cliente.TakeTransformer.HasValue)
+              transformador = cliente.TakeTransformer.Value ? "Sim" : "Não";
+            else
+              transformador = "Não";
+
+            if (cliente.Has220V.HasValue)
+              tomada220 = cliente.Has220V.Value ? "Sim" : "Não";
+            else
+              tomada220 = "Não";
+
+            if (cliente.HasStairs.HasValue)
+              escada = cliente.HasStairs.Value ? "Sim" : "Não";
+            else
+              escada = "Não";
+
+
+            var primeiraLinha = $"Ar-condicionado: {arCondicionado}, Transformador: {transformador}, Tomada 220v: {tomada220}, Escada: {escada}";
+
+            resultado.Add(primeiraLinha);
 
             bool capturando = false;
 
