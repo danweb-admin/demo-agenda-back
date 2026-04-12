@@ -207,15 +207,6 @@ namespace Solucao.Application.Service.Implementations
         private List<string> ExtrairObservacoesPorEquipamento(ClientViewModel cliente, string equipamento)
         {
             var textoCompleto = cliente.EquipamentValues;
-
-            if (string.IsNullOrWhiteSpace(textoCompleto))
-                return new List<string>();
-
-            var linhas = textoCompleto
-                .Replace("\r", "")
-                .Split('\n')
-                .ToList();
-
             var resultado = new List<string>();
 
             var arCondicionado = "";
@@ -247,6 +238,15 @@ namespace Solucao.Application.Service.Implementations
             var primeiraLinha = $"Ar-condicionado: {arCondicionado}, Transformador: {transformador}, Tomada 220v: {tomada220}, Escada: {escada}";
 
             resultado.Add(primeiraLinha);
+
+
+            if (string.IsNullOrWhiteSpace(textoCompleto))
+                return new List<string>();
+
+            var linhas = textoCompleto
+                .Replace("\r", "")
+                .Split('\n')
+                .ToList();      
 
             bool capturando = false;
 
