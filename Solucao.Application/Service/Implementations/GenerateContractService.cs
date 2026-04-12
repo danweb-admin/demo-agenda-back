@@ -241,7 +241,7 @@ namespace Solucao.Application.Service.Implementations
 
 
             if (string.IsNullOrWhiteSpace(textoCompleto))
-                return new List<string>();
+                return resultado;
 
             var linhas = textoCompleto
                 .Replace("\r", "")
