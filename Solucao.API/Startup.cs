@@ -155,6 +155,10 @@ namespace Solucao.API
 
             app.Use(async (context, next) =>
             {
+                var brasilHora = DateTime.UtcNow.AddHours(-3);
+
+                Console.WriteLine($"[{brasilHora:yyyy-MM-dd HH:mm:ss}] Requisição: {context.Request.Method} {context.Request.Path}");
+                
                 await next();
 
                 if (context.Response.StatusCode == StatusCodes.Status401Unauthorized)
