@@ -219,11 +219,6 @@ namespace Solucao.Application.Service.Implementations
             else
               arCondicionado = "Não";
 
-            if (cliente.TakeTransformer.HasValue)
-              transformador = cliente.TakeTransformer.Value ? "Sim" : "Não";
-            else
-              transformador = "Não";
-
             if (cliente.Has220V.HasValue)
               tomada220 = cliente.Has220V.Value ? "Sim" : "Não";
             else
@@ -235,7 +230,7 @@ namespace Solucao.Application.Service.Implementations
               escada = "Não";
 
 
-            var primeiraLinha = $"Ar-condicionado: {arCondicionado}, Transformador: {transformador}, Tomada 220v: {tomada220}, Escada: {escada}";
+            var primeiraLinha = $"Ar-condicionado: {arCondicionado}, Tomada 220v: {tomada220}, Escada: {escada}";
 
             resultado.Add(primeiraLinha);
 
