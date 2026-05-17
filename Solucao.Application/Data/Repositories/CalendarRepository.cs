@@ -32,6 +32,20 @@ namespace Solucao.Application.Data.Repositories
 
         }
 
+        public async Task<IEnumerable<Calendar>> GetLocacoesPendentesAmanha()
+        {
+            var amanha = DateTime.Today.AddDays(1);
+            var pendente = "2";
+
+            return await Db.Calendars
+                .Include(x => x.Client)
+                .Include(x => x.Equipament)
+                .Where(x => x.Date.Date == amanha
+                         && x.Status == pendente
+                         && x.Active)
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<Calendar>> GetAll(DateTime date)
         {
 

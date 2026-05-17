@@ -204,41 +204,26 @@ namespace Solucao.Application.Service.Implementations
             placeholder.Remove();
         }
 
-        private List<string> ExtrairObservacoesPorEquipamento(ClientViewModel cliente, string equipamento)
+        private List<string> ExtrairObservacoesPorEquipamento(
+            ClientViewModel cliente,
+            string equipamento)
         {
             var textoCompleto = cliente.EquipamentValues;
+
             var resultado = new List<string>();
 
-            var arCondicionado = "";
-            var transformador = "";
-            var tomada220 = "";
-            var escada = "";
+            var arCondicionado = cliente.HasAirConditioning == true ? "Sim" : "Não";
+            var transformador = cliente.TakeTransformer == true ? "Sim" : "Não";
+            var tomada220 = cliente.Has220V == true ? "Sim" : "Não";
+            var escada = cliente.HasStairs == true ? "Sim" : "Não";
 
-            if (cliente.HasAirConditioning.HasValue)
-              arCondicionado = cliente.HasAirConditioning.Value ? "Sim" : "Não";
-            else
-              arCondicionado = "Não";
-
-            if (cliente.TakeTransformer.HasValue)
-              transformador = cliente.TakeTransformer.Value ? "Sim" : "Não";
-            else
-              transformador = "Não";
-
-            if (cliente.Has220V.HasValue)
-              tomada220 = cliente.Has220V.Value ? "Sim" : "Não";
-            else
-              tomada220 = "Não";
-
-            if (cliente.HasStairs.HasValue)
-              escada = cliente.HasStairs.Value ? "Sim" : "Não";
-            else
-              escada = "Não";
-
-
-            var primeiraLinha = $"Ar-condicionado: {arCondicionado}, Transformador: {transformador}, Tomada 220v: {tomada220}, Escada: {escada}";
+            var primeiraLinha =
+                $"Ar-condicionado: {arCondicionado}, " +
+                $"Transformador: {transformador}, " +
+                $"Tomada 220v: {tomada220}, " +
+                $"Escada: {escada}";
 
             resultado.Add(primeiraLinha);
-
 
             if (string.IsNullOrWhiteSpace(textoCompleto))
                 return resultado;
@@ -246,25 +231,47 @@ namespace Solucao.Application.Service.Implementations
             var linhas = textoCompleto
                 .Replace("\r", "")
                 .Split('\n')
-                .ToList();      
+                .ToList();
 
             bool capturando = false;
+            bool encontrouBloco = false;
 
             foreach (var linha in linhas)
             {
                 var trimmed = linha.Trim();
 
-                // achou o equipamento
+                if (string.IsNullOrWhiteSpace(trimmed))
+                    continue;
+
+                // encontrou marcador de equipamento
                 if (trimmed.StartsWith("->"))
                 {
-                    capturando = trimmed
-                        .Equals($"->{equipamento}", StringComparison.OrdinalIgnoreCase);
+                    encontrouBloco = true;
+
+                    var nomeBloco = trimmed
+                        .Replace("->", "")
+                        .Trim();
+
+                    capturando = nomeBloco.Equals(
+                        equipamento,
+                        StringComparison.OrdinalIgnoreCase);
 
                     continue;
                 }
 
-                if (capturando && !string.IsNullOrWhiteSpace(trimmed))
+                // LINHAS GERAIS
+                // tudo antes do primeiro ->
+                if (!encontrouBloco)
+                {
                     resultado.Add(trimmed);
+                    continue;
+                }
+
+                // LINHAS DO EQUIPAMENTO
+                if (capturando)
+                {
+                    resultado.Add(trimmed);
+                }
             }
 
             return resultado;

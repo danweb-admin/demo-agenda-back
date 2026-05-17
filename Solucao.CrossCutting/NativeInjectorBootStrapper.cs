@@ -4,6 +4,7 @@ using Solucao.Application.Data.Interfaces;
 using Solucao.Application.Data.Repositories;
 using Solucao.Application.Service.Implementations;
 using Solucao.Application.Service.Interfaces;
+using Solucao.Application.Service.Jobs;
 using System;
 using System.Net.Http;
 
@@ -34,6 +35,8 @@ namespace Solucao.CrossCutting
             services.AddScoped<IDashboardService, DashboardService>();
             services.AddScoped<IDigitalSignatureService, DigitalSignatureService>();
             services.AddScoped<IPriceTableService, PriceTableService>();
+            services.AddScoped<INotificacaoService, NotificacaoService>();
+            services.AddScoped<GerarNotificacaoLocacaoJob>();
             services.AddScoped<TokenService>();
 
             // Infra
@@ -62,6 +65,7 @@ namespace Solucao.CrossCutting
             services.AddScoped<DigitalSignatureEventsRepository>();
             services.AddScoped<ClientDigialSignatureRepository>();
             services.AddScoped<PriceTableRepository>();
+            services.AddScoped<NotificacaoRepository>();
 
             services.AddScoped<SolucaoContext>();
 

@@ -45,6 +45,7 @@ namespace Solucao.Application.Data.Entities
         public Person Driver { get; set; }
         public Person DriverCollects { get; set; }
         public Client Client { get; set; }
+        public Notificacao Notificacao { get; set; }
         public Equipament Equipament { get; set; }
         public IList<CalendarSpecifications> CalendarSpecifications { get; set; }
         public IList<CalendarEquipamentConsumable> CalendarEquipamentConsumables { get; set; }

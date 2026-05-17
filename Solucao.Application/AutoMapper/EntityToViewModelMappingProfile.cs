@@ -46,6 +46,8 @@ namespace Solucao.Application.AutoMapper
 
             CreateMap<PriceTable, PriceTableViewModel>();
 
+            CreateMap<Notificacao, NotificacaoViewModel>().ReverseMap();
+
 
         }
 

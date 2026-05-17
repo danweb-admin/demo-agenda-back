@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Text.RegularExpressions;
+
 namespace Solucao.Application.Utils
 {
     public static class Helpers
@@ -34,6 +36,46 @@ namespace Solucao.Application.Utils
 
             return difference.TotalHours;
         }
+
+
+        public static bool TryFormatarTelefone(string telefone, out string telefoneFormatado)
+        {
+            telefoneFormatado = null;
+
+            if (string.IsNullOrWhiteSpace(telefone))
+                return false;
+
+            // Remove tudo que não for número
+            var numeros = Regex.Replace(telefone, @"\D", "");
+
+            // Remove código do país se vier (55)
+            if (numeros.StartsWith("55"))
+                numeros = numeros.Substring(2);
+
+            // Deve ter entre 10 e 11 dígitos (DDD + número)
+            if (numeros.Length < 10 || numeros.Length > 11)
+                return false;
+
+            var ddd = numeros.Substring(0, 2);
+            var numero = numeros.Substring(2);
+
+            // Se tiver 8 dígitos (fixo), opcional: rejeitar ou aceitar
+            if (numero.Length == 8)
+            {
+                // você pode bloquear fixo se quiser:
+                // return false;
+            }
+
+            // Se tiver 9 dígitos (celular), validar início com 9
+            if (numero.Length == 9 && !numero.StartsWith("9"))
+                return false;
+
+            // Monta padrão final (55 + DDD + número)
+            telefoneFormatado = $"55{ddd}{numero}";
+
+            return true;
+        }
+
     }
 }
 

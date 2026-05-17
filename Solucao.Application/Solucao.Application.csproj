@@ -37,6 +37,7 @@
     <None Remove="Migrations\" />
     <None Remove="Data\Results\" />
     <None Remove="Exceptions\DigitalSignature\" />
+    <None Remove="Service\Jobs\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Contracts\Response\" />
@@ -47,6 +48,7 @@
     <Folder Include="Migrations\" />
     <Folder Include="Data\Results\" />
     <Folder Include="Exceptions\DigitalSignature\" />
+    <Folder Include="Service\Jobs\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Migrations\20240510013801_AddedNewTableCalendarSpecificationConsumables.cs" />

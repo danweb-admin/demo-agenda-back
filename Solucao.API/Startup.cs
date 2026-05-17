@@ -19,6 +19,9 @@ using Solucao.API.Configurations;
 using Solucao.API.Services;
 using Solucao.Application.Data;
 using Solucao.Application.Utils;
+using Hangfire;
+using Hangfire.SqlServer;
+using Solucao.Application.Service.Jobs;
 
 namespace Solucao.API
 {
@@ -53,6 +56,10 @@ namespace Solucao.API
             services.AddControllers().AddNewtonsoftJson(options =>
                   options.SerializerSettings.ReferenceLoopHandling =
                   Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+            var connectionString_ = Configuration.GetConnectionString("");
+
+            
+
 
             services.AddSwaggerGen(c =>
             {
@@ -105,6 +112,14 @@ namespace Solucao.API
 
             services.AddDbContext<SolucaoContext>(options =>
                 options.UseSqlServer(connectionString));
+
+            // 🔥 Hangfire
+            services.AddHangfire(config =>
+                config.UseSqlServerStorage(connectionString)
+            );
+
+            services.AddHangfireServer();
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -146,6 +161,16 @@ namespace Solucao.API
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            // 🔥 Dashboard Hangfire
+            app.UseHangfireDashboard("/hangfire");
+
+            // 📅 Jobs recorrentes
+            RecurringJob.AddOrUpdate<GerarNotificacaoLocacaoJob>(
+                "gerar-notificacao",
+                job => job.Executar(),
+                "0 9 * * *" // todo dia às 09:00
+            );
 
             // ⬇️ CORS TEM QUE VIR AQUI
             app.UseCors();

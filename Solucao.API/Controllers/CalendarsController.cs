@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Solucao.Application.Contracts;
 using Solucao.Application.Contracts.Requests;
 using Solucao.Application.Data.Entities;
+using Solucao.Application.Service.Implementations;
 using Solucao.Application.Service.Interfaces;
 using Solucao.Application.Utils;
 using Swashbuckle.AspNetCore.Annotations;
@@ -24,12 +25,15 @@ namespace Solucao.API.Controllers
     {
         private readonly ICalendarService calendarService;
         private readonly IUserService userService;
+        private readonly INotificacaoService notificacaoService;
+
         private readonly ILogger<CalendarsController> logger;
 
-        public CalendarsController(ICalendarService _calendarService, IUserService _userService, ILogger<CalendarsController> _logger)
+        public CalendarsController(ICalendarService _calendarService, IUserService _userService, ILogger<CalendarsController> _logger, INotificacaoService _notificacaoService)
         {
             calendarService = _calendarService;
             userService = _userService;
+            notificacaoService = _notificacaoService;
             logger = _logger;
         }
 
@@ -285,6 +289,36 @@ namespace Solucao.API.Controllers
 
 
             return Ok(await calendarService.CalendarView(startDate,endDate,true, user.Id    ));
+        }
+
+        [HttpPost("calendar/confirmar")]
+        public async Task<IActionResult> Confirmar([FromBody] ResponderNotificacaoRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Token) || string.IsNullOrEmpty(request.Resposta))
+                return BadRequest("Token e resposta são obrigatórios");
+
+            var notificacao = await notificacaoService.GetByToken(request.Token);
+
+            if (notificacao == null)
+                return NotFound("Link inválido ou expirado");
+
+            // 🚫 Evitar múltiplas respostas
+            if (notificacao.Status == 'R')
+                return BadRequest("Essa solicitação já foi respondida");
+
+            // 🚫 Validar resposta
+            if (request.Resposta != "Confirmado" && request.Resposta != "Cancelado")
+                return BadRequest("Resposta inválida");
+
+            await notificacaoService.RegistrarResposta(request.Token, request.Resposta);
+
+            return Ok(new
+            {
+                sucesso = true,
+                mensagem = request.Resposta == "Confirmado"
+                    ? "Locação confirmada com sucesso!"
+                    : "Locação cancelada com sucesso!"
+            });
         }
     }
 }
