@@ -217,11 +217,13 @@ namespace Solucao.Application.Service.Implementations
             var tomada220 = cliente.Has220V == true ? "Sim" : "Não";
             var escada = cliente.HasStairs == true ? "Sim" : "Não";
 
+
             var primeiraLinha =
                 $"Ar-condicionado: {arCondicionado}, " +
                 $"Transformador: {transformador}, " +
                 $"Tomada 220v: {tomada220}, " +
                 $"Escada: {escada}";
+
 
             resultado.Add(primeiraLinha);
 
