@@ -68,10 +68,20 @@ namespace Solucao.Application.Service.Jobs
                   LocacaoId = locacao.Id,
                   Telefone = telefoneFormatado, // ajusta conforme seu model
                   Mensagem = mensagem,
-                  TokenConfirmacao = token
+                  TokenConfirmacao = token,
+                  Tentativas = 0
               };
 
-              await notificacaoService.Add(notificacao);
+              try
+              {
+                await notificacaoService.Add(notificacao);
+
+              }
+              catch (Exception ex)
+              {
+                Console.WriteLine(ex);
+              }
+
           }
       }
   }

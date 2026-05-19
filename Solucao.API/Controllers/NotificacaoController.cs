@@ -91,7 +91,10 @@ namespace Solucao.API.Controllers
 
             await notificacaoService.RegistrarResposta(request.Token, request.Resposta);
 
-            return Ok("Resposta registrada com sucesso");
+            return Ok(new
+            {
+                mensagem = "Resposta registrada com sucesso"
+            });
         }
     }
 }

@@ -387,10 +387,17 @@ namespace Solucao.Application.Service.Implementations
 
             foreach (var calendar in calendars.Where(x => x.EquipamentId == equipamentId && x.ClientId != clientId))
             {
-                if ((start >= calendar.StartTime && start <= calendar.EndTime) ||
+                var hasConflito =
+                    (start >= calendar.StartTime && start <= calendar.EndTime) ||
                     (end >= calendar.StartTime && end <= calendar.EndTime) ||
-                    (start <= calendar.StartTime && end >= calendar.EndTime))
+                    (start <= calendar.StartTime && end >= calendar.EndTime);
+
+                var statusValido =
+                    calendar.Status == "1" || calendar.Status == "2";
+
+                if (hasConflito && statusValido)
                     return true;
+                
             }
 
             return inUse;

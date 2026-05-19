@@ -27,7 +27,7 @@ namespace Solucao.Application.Data.Entities
 
         public string TokenConfirmacao { get; set; }
 
-        public int Tentativas { get; set; }
+        public int Tentativas { get; set; } = 0;
         public Calendar Locacao { get; set; }
   }
 }
