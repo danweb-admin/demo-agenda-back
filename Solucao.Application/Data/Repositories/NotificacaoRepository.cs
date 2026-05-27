@@ -30,6 +30,8 @@ namespace Solucao.Application.Data.Repositories
                 .ToListAsync();
         }
 
+        
+
         // 🔍 Buscar por Id
         public async Task<Notificacao> GetById(Guid id)
         {
@@ -54,6 +56,24 @@ namespace Solucao.Application.Data.Repositories
                 .Where(x => x.Status == 'P' && x.Active)
                 .OrderBy(x => x.CreatedAt)
                 .ToListAsync();
+        }
+
+        
+        // 🔍 Remove notificacao
+        public async Task Remover(Guid locacaoId)
+        {
+            try
+            {
+              var notificacao = await DbSet.FirstOrDefaultAsync(x => x.LocacaoId == locacaoId);
+
+              if (notificacao != null)
+                DbSet.Remove(notificacao);
+            }
+            catch (Exception ex)
+            {
+              throw;
+            }
+            
         }
 
         // ➕ Adicionar

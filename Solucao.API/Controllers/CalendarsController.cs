@@ -303,7 +303,7 @@ namespace Solucao.API.Controllers
                 return NotFound("Link inválido ou expirado");
 
             // 🚫 Evitar múltiplas respostas
-            if (notificacao.Status == 'R')
+            if (notificacao.Status == "R")
                 return BadRequest("Essa solicitação já foi respondida");
 
             // 🚫 Validar resposta

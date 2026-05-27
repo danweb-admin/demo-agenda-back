@@ -32,9 +32,10 @@ namespace Solucao.Application.Service.Implementations
         private EquipmentRelationshipRepository equipmentRelationshipRepository;
         private readonly IMapper mapper;
         private readonly HistoryRepository history;
+        private readonly INotificacaoService notificacaoService;
 
 
-        public CalendarService(CalendarRepository _calendarRepository, IMapper _mapper, SpecificationRepository _specificationRepository, IEquipamentRepository _equipamentRepository, IClientRepository _clientRepository, HistoryRepository _history, EquipmentRelationshipRepository _equipmentRelationshipRepository)
+        public CalendarService(CalendarRepository _calendarRepository, IMapper _mapper, SpecificationRepository _specificationRepository, IEquipamentRepository _equipamentRepository, IClientRepository _clientRepository, HistoryRepository _history, EquipmentRelationshipRepository _equipmentRelationshipRepository, INotificacaoService _notificacaoService)
         {
             calendarRepository = _calendarRepository;
             mapper = _mapper;
@@ -43,6 +44,7 @@ namespace Solucao.Application.Service.Implementations
             clientRepository = _clientRepository;
             equipmentRelationshipRepository = _equipmentRelationshipRepository;
             history = _history;
+            notificacaoService = _notificacaoService;
         }
 
         public async Task<IEnumerable<CalendarViewModel>> GetAll(DateTime date)
@@ -54,7 +56,7 @@ namespace Solucao.Application.Service.Implementations
             return mapper.Map<CalendarViewModel>(await calendarRepository.GetById(id));
         }
 
-        public Task<ValidationResult> Add(CalendarViewModel calendar, Guid user)
+        public async Task<ValidationResult> Add(CalendarViewModel calendar, Guid user)
         {
             calendar.Id = Guid.NewGuid();
             calendar.Client = null;
@@ -78,7 +80,14 @@ namespace Solucao.Application.Service.Implementations
 
             var _calendar = mapper.Map<Calendar>(calendar);
 
-            return calendarRepository.Add(_calendar);
+            var result = await calendarRepository.Add(_calendar);
+
+            if (result != ValidationResult.Success)
+              throw new Exception("Erro para gravar Locacao");
+
+            await AddNotificacao(_calendar);
+
+            return result;
         }
 
         public async Task<ValidationResult> Update(CalendarViewModel calendar, Guid user)
@@ -86,6 +95,7 @@ namespace Solucao.Application.Service.Implementations
 
             ValidationResult result;
             Guid parentId;
+            Guid locacaoId;
 
             // Atualiza o registro e inativa a locação
             if (calendar.ParentId != null)
@@ -95,6 +105,7 @@ namespace Solucao.Application.Service.Implementations
                 temp.UpdatedAt = DateTime.Now;
                 temp.Client = null;
                 parentId = temp.ParentId.Value;
+                locacaoId = temp.Id.Value;
                 calendar.Client = null;
                 var temp_ = mapper.Map<Calendar>(temp);
 
@@ -107,9 +118,13 @@ namespace Solucao.Application.Service.Implementations
                 calendar.Active = false;
                 parentId = calendar.Id.Value;
                 var _calendar = mapper.Map<Calendar>(calendar);
+                locacaoId = _calendar.Id;
+
 
                 result = await calendarRepository.Update(_calendar);
             }
+
+            await notificacaoService.Remover(locacaoId);
 
             if (result == null)
             {
@@ -142,7 +157,9 @@ namespace Solucao.Application.Service.Implementations
 
                 var _calendarAdd = mapper.Map<Calendar>(calendar);
 
-                return await calendarRepository.Add(_calendarAdd);
+                await calendarRepository.Add(_calendarAdd);
+
+                await AddNotificacao(_calendarAdd);
 
             }
 
@@ -599,6 +616,81 @@ namespace Solucao.Application.Service.Implementations
             await history.Add(TableEnum.Calendar, user, OperationEnum.Agendamentos, user);
 
             return await calendarRepository.CalendarView(startDate, endDate, isAdmin);
+        }
+
+        private async Task AddNotificacao(Calendar locacao_)
+        {
+            var urlConfirmacao = Environment.GetEnvironmentVariable("UrlConfirmacao");
+            var apiKeyEvolutionApi = Environment.GetEnvironmentVariable("ApiKeyEvolutionApi");
+            var locadorName = Environment.GetEnvironmentVariable("LocadorName");
+
+            var locacao = await calendarRepository.GetById(locacao_.Id);
+
+            if (string.IsNullOrEmpty(locadorName))
+            {
+                Console.WriteLine($"❌ Parametro Nome Locador não informado.");
+            }
+
+            if (string.IsNullOrEmpty(urlConfirmacao))
+            {
+                Console.WriteLine($"❌ Parametro URL Confirmaçao não informado.");
+            }
+
+            if (string.IsNullOrEmpty(apiKeyEvolutionApi))
+            {
+                Console.WriteLine($"❌ Parametro ApiKey Evolution API não informado.");
+            }
+
+            var telefoneFormatado = string.Empty;
+            var token = Guid.NewGuid().ToString();
+
+            var existe = await notificacaoService.ExistePorLocacao(locacao.Id);
+
+            var telefoneFormat = Utils.Helpers.TryFormatarTelefone(locacao.Client.CellPhone,out telefoneFormatado);
+
+            if (!telefoneFormat)
+            {
+              Console.WriteLine($"❌ Telefone Locatario inválido: {locacao.Date.ToShortDateString()} - {locacao.StartTime.Value.ToShortTimeString()} - {locacao.EndTime.Value.ToShortTimeString()} - {locacao.Client.Name}, {locacao.Equipament.Name}");
+             
+            }
+
+            var nome = locacao.Client.Name;
+            var data = locacao.Date;
+            var equipamento = locacao.Equipament.Name;
+            var link = $"{urlConfirmacao}confirmacao?token={token}";
+            var hora = locacao.StartTime.Value.ToString("HH:mm") + " a " + locacao.EndTime.Value.ToString("HH:mm"); 
+
+var mensagem = 
+$@"Olá, *{nome.Trim()}*! 😊
+
+Somos da *{locadorName}* e gostaríamos de confirmar sua locação.
+
+📦 *Equipamento:* {equipamento}
+📅 *Data:* {data:dd/MM/yyyy}
+⏰ *Horário:* {hora}
+
+Por favor, clique no link abaixo para realizar a confirmação da locação:
+👉 {link}";
+              
+
+              var notificacao = new NotificacaoViewModel
+              {
+                  LocacaoId = locacao.Id,
+                  Telefone = telefoneFormatado, // ajusta conforme seu model
+                  Mensagem = mensagem,
+                  TokenConfirmacao = token,
+                  Tentativas = 0
+              };
+
+              try
+              {
+                await notificacaoService.Add(notificacao);
+
+              }
+              catch (Exception ex)
+              {
+                Console.WriteLine(ex);
+              }
         }
     }
 }

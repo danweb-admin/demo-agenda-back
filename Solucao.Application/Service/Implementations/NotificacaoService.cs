@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
+using NetDevPack.Messaging;
+using Newtonsoft.Json;
 using Solucao.Application.Contracts;
 using Solucao.Application.Data.Entities;
 using Solucao.Application.Data.Repositories;
@@ -26,7 +30,7 @@ namespace Solucao.Application.Service.Implementations
         {
             notificacao.Id = Guid.NewGuid();
             notificacao.CreatedAt = DateTime.Now;
-            notificacao.Status = 'P'; // Pendente
+            notificacao.Status = "P"; // Pendente
             notificacao.Active = true;
 
             var _notificacao = mapper.Map<Notificacao>(notificacao);
@@ -104,5 +108,68 @@ namespace Solucao.Application.Service.Implementations
         {
           return await notificacaoRepository.ExistePorLocacao(locacaoId);
         }
-  }
+
+        public async Task EnviarWhatsapp(NotificacaoViewModel notificacao)
+        {
+            var evolutionAPI = Environment.GetEnvironmentVariable("EvolutionAPI");
+            var apiKeyEvolutionApi = Environment.GetEnvironmentVariable("ApiKeyEvolutionApi");
+
+
+            if (string.IsNullOrEmpty(evolutionAPI))
+            {
+                Console.WriteLine($"❌ Parametro Evolution API não informado.");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(apiKeyEvolutionApi))
+            {
+                Console.WriteLine($"❌ Parametro ApiKey Evolution API não informado.");
+                return;
+            }
+
+            using var client = new HttpClient();
+
+            
+
+            var body = new
+            {
+                number = "5543999510994",
+                textMessage = new
+                {
+                    text = notificacao.Mensagem
+                }
+            };
+
+            var request = new HttpRequestMessage(
+                HttpMethod.Post,
+                $"{evolutionAPI}/message/sendText/danweb"
+            );
+
+            request.Headers.Add("apikey", apiKeyEvolutionApi);
+
+            request.Content = new StringContent(
+                JsonConvert.SerializeObject(body),
+                Encoding.UTF8,
+                "application/json");
+
+      
+            var response = await client.SendAsync(request);
+
+            var result = await response.Content.ReadAsStringAsync();
+
+            Console.WriteLine(result);
+            
+        }
+
+        public async Task<IEnumerable<NotificacaoViewModel>> GetPendentes()
+        {
+          return mapper.Map<IEnumerable<NotificacaoViewModel>>(await notificacaoRepository.GetPendentes());
+ 
+        }
+
+        public async Task Remover(Guid locacaoId)
+        {
+          await notificacaoRepository.Remover(locacaoId);
+        }
+    }
 }

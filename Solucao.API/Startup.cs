@@ -172,6 +172,12 @@ namespace Solucao.API
                 "0 9-19 * * *" // de hora em hora das 09h às 19h
             );
 
+            RecurringJob.AddOrUpdate<EnviarWhatsappJob>(
+                "enviar-whatsapp",
+                job => job.Executar(),
+                "*/5 * * * *"
+            );
+
             // ⬇️ CORS TEM QUE VIR AQUI
             app.UseCors();
 

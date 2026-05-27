@@ -21,6 +21,28 @@ namespace Solucao.Application.Service.Jobs
 
       public async Task Executar()
       {
+          var urlConfirmacao = Environment.GetEnvironmentVariable("UrlConfirmacao");
+          var apiKeyEvolutionApi = Environment.GetEnvironmentVariable("ApiKeyEvolutionApi");
+          var locadorName = Environment.GetEnvironmentVariable("LocadorName");
+
+          if (string.IsNullOrEmpty(locadorName))
+          {
+              Console.WriteLine($"❌ Parametro Nome Locador não informado.");
+              return;
+          }
+
+          if (string.IsNullOrEmpty(urlConfirmacao))
+          {
+              Console.WriteLine($"❌ Parametro URL Confirmaçao não informado.");
+              return;
+          }
+
+          if (string.IsNullOrEmpty(apiKeyEvolutionApi))
+          {
+              Console.WriteLine($"❌ Parametro ApiKey Evolution API não informado.");
+              return;
+          }
+
           var locacoes = await calendarRepository.GetLocacoesPendentesAmanha();
 
           foreach (var locacao in locacoes)
@@ -47,20 +69,20 @@ namespace Solucao.Application.Service.Jobs
             var nome = locacao.Client.Name;
             var data = locacao.Date;
             var equipamento = locacao.Equipament.Name;
-            var link = $"https://swr-locacoes-agenda.online/confirmarcao?token={token}";
+            var link = $"{urlConfirmacao}confirmacao?token={token}";
             var hora = locacao.StartTime.Value.ToString("HH:mm") + " a " + locacao.EndTime.Value.ToString("HH:mm"); 
 
-            var mensagem = $@"
-              Olá, *{nome}*! 😊
+var mensagem = 
+$@"Olá, *{nome.Trim()}*! 😊
 
-              Estamos passando para confirmar sua locação do equipamento *{equipamento}*.
+Somos da *{locadorName}* e gostaríamos de confirmar sua locação.
 
-              📅 Data: *{data:dd/MM/yyyy}*  
-              ⏰ Horário: *{hora}*
+📦 *Equipamento:* {equipamento}
+📅 *Data:* {data:dd/MM/yyyy}
+⏰ *Horário:* {hora}
 
-              Por favor, confirme:
-              👉 {link}
-              ";
+Por favor, clique no link abaixo para realizar a confirmação da locação:
+👉 {link}";
               
 
               var notificacao = new NotificacaoViewModel

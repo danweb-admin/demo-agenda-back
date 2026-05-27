@@ -18,7 +18,7 @@ namespace Solucao.Application.Contracts
         /// F - Falha
         /// R - Respondido
         /// </summary>
-        public char Status { get; set; }
+        public string Status { get; set; }
 
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
