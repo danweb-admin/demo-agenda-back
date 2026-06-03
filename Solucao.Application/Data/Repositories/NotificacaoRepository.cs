@@ -52,8 +52,26 @@ namespace Solucao.Application.Data.Repositories
         // 🔍 Buscar pendentes (para envio ou reenvio)
         public async Task<IEnumerable<Notificacao>> GetPendentes()
         {
+            var hoje = DateTime.Today;
+            DateTime dataFinal;
+
+            if (hoje.DayOfWeek == DayOfWeek.Friday)
+            {
+                // Sexta: pega sexta, sábado, domingo e segunda
+                dataFinal = hoje.AddDays(3);
+            }
+            else
+            {
+                // Demais dias: hoje e amanhã
+                dataFinal = hoje.AddDays(1);
+            }
+
             return await DbSet
-                .Where(x => x.Status == 'P' && x.Active)
+                .Where(x =>
+                    x.Status == 'P' &&
+                    x.Active &&
+                    x.Locacao.Date.Date >= hoje &&
+                    x.Locacao.Date.Date <= dataFinal)
                 .OrderBy(x => x.CreatedAt)
                 .ToListAsync();
         }

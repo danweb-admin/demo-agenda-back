@@ -5,7 +5,7 @@ namespace Solucao.Application.Data.Entities
     {
         public Guid LocacaoId { get; set; }
 
-        public string Telefone { get; set; }
+        public string? Telefone { get; set; }
         public string Mensagem { get; set; }
 
 

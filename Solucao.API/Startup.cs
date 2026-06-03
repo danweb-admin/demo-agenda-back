@@ -169,13 +169,13 @@ namespace Solucao.API
             RecurringJob.AddOrUpdate<GerarNotificacaoLocacaoJob>(
                 "gerar-notificacao",
                 job => job.Executar(),
-                "0 9-19 * * *" // de hora em hora das 09h às 19h
+                "0 9-19 * * 1-6" // de hora em hora das 09h às 19h
             );
 
             RecurringJob.AddOrUpdate<EnviarWhatsappJob>(
                 "enviar-whatsapp",
                 job => job.Executar(),
-                "*/5 * * * *"
+                "*/15 9-18 * * 1-6"
             );
 
             // ⬇️ CORS TEM QUE VIR AQUI

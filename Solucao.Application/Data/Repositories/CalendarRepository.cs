@@ -34,7 +34,7 @@ namespace Solucao.Application.Data.Repositories
 
         public async Task<IEnumerable<Calendar>> GetLocacoesPendentesAmanha()
         {
-            var amanha = DateTime.Today.AddDays(15);
+            var amanha = DateTime.Today.AddDays(2);
             var hoje = DateTime.Now;
             var pendente = "2";
 

@@ -21,7 +21,6 @@ namespace Solucao.Application.Data.Mappings
 
           // 📞 Telefone
           builder.Property(n => n.Telefone)
-                  .IsRequired()
                   .HasMaxLength(20);
 
           // 📝 Mensagem
