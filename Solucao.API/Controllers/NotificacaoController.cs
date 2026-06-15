@@ -10,7 +10,7 @@ namespace Solucao.API.Controllers
 {
     [Route("api/v1/notificacao")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class NotificacaoController : ControllerBase
     {
         private readonly INotificacaoService notificacaoService;

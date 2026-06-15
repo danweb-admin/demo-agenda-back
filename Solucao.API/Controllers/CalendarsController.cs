@@ -51,6 +51,14 @@ namespace Solucao.API.Controllers
             return await calendarService.GetAllByDate(model.Date);
         }
 
+        [HttpGet("calendar/visualizacao")]
+        [AllowAnonymous]
+        public async Task<IEnumerable<EquipamentList>> GetAllByDateVisualizacaoAsync([FromQuery] CalendarRequest model)
+        {
+            logger.LogInformation($"{DateTime.Now} - {nameof(CalendarsController)} -{nameof(GetAllAsync)} | Inicio da chamada");
+            return await calendarService.GetAllByDate(model.Date);
+        }
+
         [HttpGet("calendar/by-id")]
         [AllowAnonymous]
         public async Task<CalendarViewModel> GetByIdAsync([FromQuery] Guid id)

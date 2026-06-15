@@ -25,8 +25,11 @@ namespace Solucao.Application.Data.Repositories
         public async Task<IEnumerable<Notificacao>> GetAll()
         {
             return await DbSet
+                .Include(x => x.Locacao)
+                .Include(x => x.Locacao.Client)
+                .Include(x => x.Locacao.Equipament)
                 .Where(x => x.Active)
-                .OrderByDescending(x => x.CreatedAt)
+                .OrderBy(x => x.Locacao.Date)
                 .ToListAsync();
         }
 
