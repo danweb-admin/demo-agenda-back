@@ -355,3 +355,7 @@ MigrationBackup/
 **/.DS_Store
 Solucao.Test/coverage.json
 Solucao.Test/lcov.info
+
+
+.venv/
+venv/.venv/

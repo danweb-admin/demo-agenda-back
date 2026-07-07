@@ -57,6 +57,8 @@ namespace Solucao.Application.Data
         public DbSet<ClientDigitalSignature> ClientDigitalSignatures { get; set; }
         public DbSet<PriceTable> PriceTable { get; set; }
         public DbSet<Notificacao> Notificacao { get; set; }
+        public DbSet<Logistics> Logistics { get; set; }
+
 
 
         public DbSet<CalendarReportResponse> CalendarReports { get; set; }
@@ -97,6 +99,7 @@ namespace Solucao.Application.Data
             modelBuilder.ApplyConfiguration(new ClientDigitalSignatureMapping());
             modelBuilder.ApplyConfiguration(new PriceTableMapping());
             modelBuilder.ApplyConfiguration(new NotificacaoMappings());
+            modelBuilder.ApplyConfiguration(new LogisticsMappings());
 
 
 

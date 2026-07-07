@@ -48,6 +48,9 @@ namespace Solucao.Application.AutoMapper
 
             CreateMap<Notificacao, NotificacaoViewModel>().ReverseMap();
 
+            CreateMap<Logistics, LogisticsViewModel>().ReverseMap();
+
+
 
         }
 

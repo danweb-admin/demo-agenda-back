@@ -25,7 +25,7 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "DbUser": "sa",
-        "Database": "MGLaser",
+        "Database": "SwrLocacoes",
         "DbPort": "1433",
         "DbServer": "98.94.226.114",
         "Password": "DanWeb@2022!",

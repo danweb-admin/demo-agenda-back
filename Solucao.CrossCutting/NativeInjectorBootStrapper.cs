@@ -36,6 +36,7 @@ namespace Solucao.CrossCutting
             services.AddScoped<IDigitalSignatureService, DigitalSignatureService>();
             services.AddScoped<IPriceTableService, PriceTableService>();
             services.AddScoped<INotificacaoService, NotificacaoService>();
+            services.AddScoped<ILogisticsService, LogisticsService>();
             services.AddScoped<GerarNotificacaoLocacaoJob>();
             services.AddScoped<TokenService>();
 
@@ -66,6 +67,7 @@ namespace Solucao.CrossCutting
             services.AddScoped<ClientDigialSignatureRepository>();
             services.AddScoped<PriceTableRepository>();
             services.AddScoped<NotificacaoRepository>();
+            services.AddScoped<LogisticsRepository>();
 
             services.AddScoped<SolucaoContext>();
 

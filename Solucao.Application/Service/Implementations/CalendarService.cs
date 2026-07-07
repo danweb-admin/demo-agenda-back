@@ -33,9 +33,11 @@ namespace Solucao.Application.Service.Implementations
         private readonly IMapper mapper;
         private readonly HistoryRepository history;
         private readonly INotificacaoService notificacaoService;
+        private readonly ILogisticsService logisticsService;
 
 
-        public CalendarService(CalendarRepository _calendarRepository, IMapper _mapper, SpecificationRepository _specificationRepository, IEquipamentRepository _equipamentRepository, IClientRepository _clientRepository, HistoryRepository _history, EquipmentRelationshipRepository _equipmentRelationshipRepository, INotificacaoService _notificacaoService)
+
+        public CalendarService(CalendarRepository _calendarRepository, IMapper _mapper, SpecificationRepository _specificationRepository, IEquipamentRepository _equipamentRepository, IClientRepository _clientRepository, HistoryRepository _history, EquipmentRelationshipRepository _equipmentRelationshipRepository, INotificacaoService _notificacaoService, ILogisticsService _logisticsService)
         {
             calendarRepository = _calendarRepository;
             mapper = _mapper;
@@ -45,6 +47,7 @@ namespace Solucao.Application.Service.Implementations
             equipmentRelationshipRepository = _equipmentRelationshipRepository;
             history = _history;
             notificacaoService = _notificacaoService;
+            logisticsService = _logisticsService;
         }
 
         public async Task<IEnumerable<CalendarViewModel>> GetAll(DateTime date)
@@ -85,7 +88,10 @@ namespace Solucao.Application.Service.Implementations
             if (result != ValidationResult.Success)
               throw new Exception("Erro para gravar Locacao");
 
-            await AddNotificacao(_calendar);
+            //await AddNotificacao(_calendar);
+
+            
+            await logisticsService.SincronizarLocacao(_calendar.Id);
 
             return result;
         }
@@ -126,6 +132,8 @@ namespace Solucao.Application.Service.Implementations
 
             await notificacaoService.Remover(locacaoId);
 
+            await logisticsService.RemoverLocacao(locacaoId);
+
             if (result == null)
             {
                 calendar.ParentId = parentId;
@@ -159,7 +167,9 @@ namespace Solucao.Application.Service.Implementations
 
                 await calendarRepository.Add(_calendarAdd);
 
-                await AddNotificacao(_calendarAdd);
+                //await AddNotificacao(_calendarAdd);
+
+                await logisticsService.SincronizarLocacao(_calendarAdd.Id);
 
             }
 

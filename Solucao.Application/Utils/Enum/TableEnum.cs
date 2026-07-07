@@ -5,7 +5,8 @@ namespace Solucao.Application.Utils.Enum
     {
         User,
         Consumable,
-        Calendar
+        Calendar,
+        Logistics
     }
 }
 
