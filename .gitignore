@@ -359,3 +359,5 @@ Solucao.Test/lcov.info
 
 .venv/
 venv/.venv/
+
+Solucao.API/Properties/launchSettings.json
