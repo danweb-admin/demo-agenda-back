@@ -48,6 +48,9 @@ namespace Solucao.Application.Service.Implementations
         // Cliente e aparelho
         var partes = request.Titulo.Split(" - ", StringSplitOptions.RemoveEmptyEntries);
 
+        if (partes.Length < 2)
+          return false;
+
         var user = await userRepository.GetByEmail("admin@admin.com");
       
         var cliente = await clientRepository.GetByName(partes[0]);
