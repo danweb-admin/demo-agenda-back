@@ -40,6 +40,8 @@ namespace Solucao.Application.Data.Entities
         public string FileNameDocx { get; set; }
         public string FileNamePdf { get; set; }
         public string Uid { get; set; }
+        public string GoogleEventId { get; set; }
+        public DateTime? UltSincronizacaoGoogle { get; set; }
         public User User { get; set; }
         public Person Technique { get; set; }
         public Person Driver { get; set; }

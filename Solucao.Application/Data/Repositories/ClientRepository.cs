@@ -26,6 +26,8 @@ namespace Solucao.Application.Data.Repositories
             DbSet = Db.Set<Client>();
         }
 
+        
+
         public async Task<IEnumerable<Client>> GetAll(bool ativo, string search)
         {
             if (string.IsNullOrEmpty(search))
@@ -36,6 +38,17 @@ namespace Solucao.Application.Data.Repositories
             return await Db.Clients
                 .Include(x => x.City)
                 .Include(x => x.State).Where(x => x.Active == ativo && (x.Address.Contains(search) || x.Email.Contains(search) || x.Name.Contains(search) || x.Phone.Contains(search) || x.CellPhone.Contains(search))).OrderBy(x => x.Name).ToListAsync();
+        }
+
+        public async Task<Client> GetByName(string name)
+        {
+            
+            return await Db.Clients
+                .Include(x => x.City)
+                .Include(x => x.State).
+                FirstOrDefaultAsync(x => x.Name == name &&  x.Active);
+
+            
         }
 
         public async Task<Client> GetById(Guid Id)

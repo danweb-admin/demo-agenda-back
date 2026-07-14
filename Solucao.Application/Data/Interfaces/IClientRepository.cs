@@ -13,6 +13,7 @@ namespace Solucao.Application.Data.Interfaces
     {
         Task<IEnumerable<Client>> GetAll(bool ativo, string search);
         Task<Client> GetById(Guid Id);
+        Task<Client> GetByName(string name);
         Task<ValidationResult> Add(Client client);
         Task<ValidationResult> Update(ClientViewModel client);
         Task<ValidationResult> AddClientEquipmentAndTimeValues(Client client);

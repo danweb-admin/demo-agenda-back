@@ -32,6 +32,12 @@ namespace Solucao.Application.Data.Repositories
                 .Where(x => x.Active == ativo).OrderBy(x => x.Order).ToListAsync();
         }
 
+        public virtual async Task<Equipament> GetByName(string name)
+        {
+            return await Db.Equipaments
+                .FirstOrDefaultAsync(x => x.Name == name);
+        }
+
         public virtual async Task<IEnumerable<Equipament>> GetListById(List<Guid> guids)
         {
             return await Db.Equipaments.Include(x => x.EquipamentSpecifications)

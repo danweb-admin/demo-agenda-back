@@ -37,6 +37,8 @@ namespace Solucao.CrossCutting
             services.AddScoped<IPriceTableService, PriceTableService>();
             services.AddScoped<INotificacaoService, NotificacaoService>();
             services.AddScoped<ILogisticsService, LogisticsService>();
+            services.AddScoped<IGoogleService, GoogleService>();
+
             services.AddScoped<GerarNotificacaoLocacaoJob>();
             services.AddScoped<TokenService>();
 

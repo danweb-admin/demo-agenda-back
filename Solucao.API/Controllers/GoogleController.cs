@@ -6,6 +6,7 @@ using Solucao.Application.Contracts.Requests;
 using Solucao.Application.Exceptions.Calendar;
 using Solucao.Application.Exceptions.Model;
 using System.Text.Json;
+using Solucao.Application.Service.Interfaces;
 
 namespace Solucao.API.Controllers
 {
@@ -13,12 +14,15 @@ namespace Solucao.API.Controllers
   [ApiController]
   public class GoogleController : ControllerBase
   {
-    public GoogleController()
+    private readonly IGoogleService googleService;
+
+    public GoogleController(IGoogleService _googleService)
     {
+      googleService = _googleService;
     }
 
     [HttpPost()]
-    public  IActionResult PostAsync([FromBody] GoogleRequest model)
+    public async Task<IActionResult> PostAsync([FromBody] GoogleRequest model)
     {
         Console.WriteLine(".....GOOGLE REQUEST.......");
         var json = JsonSerializer.Serialize(model, new JsonSerializerOptions
@@ -28,7 +32,9 @@ namespace Solucao.API.Controllers
 
         Console.WriteLine(json);
 
-      return Ok();
+        await googleService.ExtrairInformacoe(model);
+
+        return Ok();
 
     }
   }

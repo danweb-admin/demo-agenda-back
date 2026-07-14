@@ -122,10 +122,11 @@ namespace Solucao.Application.Data.Repositories
                         .FirstOrDefaultAsync(x => x.Id == id);
         }
 
-        public async Task<Calendar> GetByUid(string uid)
+        public async Task<Calendar> GetByGoogleEventId(string uid)
         {
+
             return await Db.Calendars
-                        .FirstOrDefaultAsync(x => x.Uid == uid);
+                        .FirstOrDefaultAsync(x => x.GoogleEventId == uid);
         }
 
         

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Solucao.Application.Contracts;
 using Solucao.Application.Data.Entities;
+using Solucao.Application.Data.Interfaces;
 using Solucao.Application.Data.Repositories;
 using Solucao.Application.Service.Interfaces;
 using Solucao.Application.Utils.Enum;
@@ -17,19 +18,22 @@ namespace Solucao.Application.Service.Implementations
         private readonly LogisticsRepository repository;
         private readonly IMapper mapper;
         private readonly HistoryRepository history;
-            private readonly CalendarRepository calendarRepository;
+        private readonly CalendarRepository calendarRepository;
+        private readonly IPersonRepository personRepository;
 
 
         public LogisticsService(
             LogisticsRepository repository,
             IMapper mapper,
             HistoryRepository history,
-            CalendarRepository calendarRepository)
+            CalendarRepository calendarRepository,
+            IPersonRepository personRepository)
         {
             this.repository = repository;
             this.mapper = mapper;
             this.history = history;
             this.calendarRepository = calendarRepository;
+            this.personRepository = personRepository;
         }
 
         public async Task<IEnumerable<LogisticsViewModel>> GetAll()
@@ -167,6 +171,16 @@ namespace Solucao.Application.Service.Implementations
 
           // Remove eventos existentes
           await repository.RemoveByCalendar(calendarId);
+
+          var motorista = await personRepository.GetByName("M","X");
+
+          if (calendar.DriverId == null)
+            calendar.DriverId = motorista.First().Id;
+
+          if (calendar.DriverCollectsId == null)
+            calendar.DriverCollectsId = motorista.First().Id;
+          
+            
 
           // Entrega
           if (calendar.DriverId != null)

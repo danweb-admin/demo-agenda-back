@@ -104,6 +104,11 @@ namespace Solucao.Application.Data.Mappings
 
             builder.Property(c => c.PaymentStatus).
                 HasColumnType("varchar(20)");
+
+            builder.Property(c => c.UltSincronizacaoGoogle).
+                HasColumnType("datetime2");
+
+
         }
     }
 }
