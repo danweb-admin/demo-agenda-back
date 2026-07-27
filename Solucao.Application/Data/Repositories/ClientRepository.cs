@@ -229,5 +229,13 @@ namespace Solucao.Application.Data.Repositories
         {
             return await Db.ClientSpecifications.Where(x => x.ClientId == clientId).OrderBy(x => x.Hours).ToListAsync();
         }
-    }
+
+        public async Task<Client> GetByIntegrationName(string name)
+        {
+          return await Db.Clients
+                .Include(x => x.City)
+                .Include(x => x.State).
+                FirstOrDefaultAsync(x => x.Specialty == name &&  x.Active);
+        }
+  }
 }

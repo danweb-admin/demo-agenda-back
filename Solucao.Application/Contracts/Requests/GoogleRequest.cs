@@ -9,7 +9,8 @@ namespace Solucao.Application.Contracts.Requests
     public string Fim { get; set; }
     public string Local { get; set; }
     public string Descricao { get; set; }
-    
+    public string Aparelho { get; set; }
+
   }
 }
 

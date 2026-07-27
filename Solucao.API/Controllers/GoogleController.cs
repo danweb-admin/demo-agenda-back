@@ -7,6 +7,8 @@ using Solucao.Application.Exceptions.Calendar;
 using Solucao.Application.Exceptions.Model;
 using System.Text.Json;
 using Solucao.Application.Service.Interfaces;
+using Solucao.Application.Exceptions.DigitalSignature;
+using Solucao.Application.Exceptions.Integration;
 
 namespace Solucao.API.Controllers
 {
@@ -24,17 +26,29 @@ namespace Solucao.API.Controllers
     [HttpPost()]
     public async Task<IActionResult> PostAsync([FromBody] GoogleRequest model)
     {
-        Console.WriteLine(".....GOOGLE REQUEST.......");
-        var json = JsonSerializer.Serialize(model, new JsonSerializerOptions
-        {
+      try
+      {
+          Console.WriteLine(".....GOOGLE REQUEST.......");
+          var json = JsonSerializer.Serialize(model, new JsonSerializerOptions
+          {
             WriteIndented = true
-        });
+          });
 
-        Console.WriteLine(json);
+          Console.WriteLine(json);
 
-        //await googleService.ExtrairInformacoe(model);
+          await googleService.ExtrairInformacoe(model);
 
-        return Ok();
+          return Ok();
+      }
+      catch (IntegrationException ie)
+      {
+        return NotFound(ie.Message);
+      }
+      catch (Exception ex)
+      {
+        return StatusCode(StatusCodes.Status500InternalServerError, ex);
+      }
+        
 
     }
   }

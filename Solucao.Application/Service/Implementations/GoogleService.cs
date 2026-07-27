@@ -8,6 +8,7 @@ using Solucao.Application.Contracts.Requests;
 using Solucao.Application.Data.Entities;
 using Solucao.Application.Data.Interfaces;
 using Solucao.Application.Data.Repositories;
+using Solucao.Application.Exceptions.Integration;
 using Solucao.Application.Service.Interfaces;
 using Calendar = Solucao.Application.Data.Entities.Calendar;
 
@@ -46,16 +47,21 @@ namespace Solucao.Application.Service.Implementations
     private async Task<bool> InsereLocacao(GoogleRequest request)
     {
         // Cliente e aparelho
-        var partes = request.Titulo.Split(" - ", StringSplitOptions.RemoveEmptyEntries);
+        var aparelho = await equipmentRepository.GetByName(request.Aparelho.Trim());
 
-        if (partes.Length < 2)
-          return false;
+        if (aparelho == null )
+          throw new IntegrationException($"Aparelho: {request.Aparelho.Trim()}, Aparelho não encontrado.");
+
+        var cliente = await clientRepository.GetByIntegrationName(request.Titulo);
+
+        if (cliente == null)
+          throw new IntegrationException($"Locatário: {request.Aparelho.Trim()}, Aparelho não encontrado.");
 
         var user = await userRepository.GetByEmail("admin@admin.com");
       
-        var cliente = await clientRepository.GetByName(partes[0]);
-
-        var aparelho = await equipmentRepository.GetByName(partes[1]);
+        
+        return true;
+        
 
         var horaInicio =  DateTime.Parse(request.Inicio);
         var horaFim = DateTime.Parse(request.Fim);
