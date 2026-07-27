@@ -58,7 +58,7 @@ namespace Solucao.Application.Service.Implementations
           throw new IntegrationException($"Locatário: {request.Aparelho.Trim()}, Aparelho não encontrado.");
 
         var user = await userRepository.GetByEmail("admin@admin.com");
-      
+       
         
         return true;
         
