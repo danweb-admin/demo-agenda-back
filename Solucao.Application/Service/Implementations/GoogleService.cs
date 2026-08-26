@@ -70,7 +70,7 @@ namespace Solucao.Application.Service.Implementations
         {
             var split = titulo.Split("-");
 
-            cliente = await clientRepository.GetByIntegrationName(split[0]);
+            cliente = await clientRepository.GetByIntegrationName(split[0].Trim());
         }
 
         if (cliente == null)
