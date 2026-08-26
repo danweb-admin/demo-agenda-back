@@ -47,7 +47,7 @@ namespace Solucao.Application.Data.Repositories
                   .Include(x => x.Calendar)
                       .ThenInclude(x => x.Client.City)
                   .Where(x => x.Active && x.DataHora.Date == data.Date)
-                  .OrderBy(x => x.DataHora)
+                  .OrderBy(x => x.DataHoraLogistica)
                   .ToListAsync();
         }
 

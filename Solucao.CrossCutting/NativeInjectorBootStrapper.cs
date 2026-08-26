@@ -41,6 +41,7 @@ namespace Solucao.CrossCutting
 
             services.AddScoped<GerarNotificacaoLocacaoJob>();
             services.AddScoped<TokenService>();
+            services.AddScoped<ClienteImportacaoService>();
 
             // Infra
             services.AddScoped<UserRepository>();

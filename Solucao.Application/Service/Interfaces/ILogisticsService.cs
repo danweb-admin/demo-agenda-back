@@ -20,6 +20,13 @@ namespace Solucao.Application.Service.Interfaces
 
         Task<ValidationResult> Update(LogisticsViewModel logistics, Guid loggedUserId);
 
+        Task<ValidationResult> UpdateDriver(LogisticsViewModel logistics, Guid loggedUserId);
+
+        Task<ValidationResult> UpdateObservacao(LogisticsViewModel logistics, Guid loggedUserId);
+
+        Task<ValidationResult> UpdateDataLog(LogisticsViewModel logistics, Guid loggedUserId);
+
+
         Task<ValidationResult> Remove(Guid id, Guid loggedUserId);
 
         Task<ValidationResult> Complete(Guid id, Guid loggedUserId);

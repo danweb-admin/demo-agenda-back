@@ -55,13 +55,9 @@ namespace Solucao.Application.Service.Implementations
         var cliente = await clientRepository.GetByIntegrationName(request.Titulo);
 
         if (cliente == null)
-          throw new IntegrationException($"Locatário: {request.Aparelho.Trim()}, Aparelho não encontrado.");
+          throw new IntegrationException($"Locatário: {request.Titulo.Trim()}, Locatário não encontrado.");
 
         var user = await userRepository.GetByEmail("admin@admin.com");
-       
-        
-        return true;
-        
 
         var horaInicio =  DateTime.Parse(request.Inicio);
         var horaFim = DateTime.Parse(request.Fim);
@@ -108,12 +104,13 @@ namespace Solucao.Application.Service.Implementations
         RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
         if (!match.Success)
-        {
-            // Não existe bloco de integração
-            return;
-        }
+          throw new IntegrationException($"Integracao não encontrada.");
+            
 
         string bloco = match.Groups[1].Value;
+        bloco = Regex.Replace(bloco, @"<br\s*/?>", "\n", RegexOptions.IgnoreCase);
+        bloco = Regex.Replace(bloco, "<.*?>", string.Empty);
+        bloco = bloco.Replace("&nbsp;", " ").Trim();
 
         var dados = new Dictionary<string, string>();
 
@@ -142,6 +139,13 @@ namespace Solucao.Application.Service.Implementations
         locacao.Discount = desconto;
         locacao.Value = valorLocacao;
         locacao.TotalValue = valorLocacao + frete - desconto;
+
+        locacao.GoogleNote =  Regex.Replace(
+            descricao,
+            @"#INTEGRACAO\s*.*?\s*#FIMINTEGRACAO",
+            "",
+            RegexOptions.Singleline | RegexOptions.IgnoreCase
+        ).Trim();
     }
 
     private decimal ObterDecimal(Dictionary<string, string> dados, string chave)

@@ -99,6 +99,72 @@ namespace Solucao.API.Controllers
             }
         }
 
+        [HttpPut("atualizar-motorista/{id}")]
+        public async Task<IActionResult> UpdateDriver(Guid id, [FromBody] LogisticsViewModel logistics)
+        {
+            try
+            {
+                logistics.Id = id;
+
+                var user = await userService.GetByName(User.Identity.Name);
+
+                var result = await service.UpdateDriver(logistics, user.Id);
+
+                if (result != ValidationResult.Success)
+                    return BadRequest(result);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPut("atualizar-observacao/{id}")]
+        public async Task<IActionResult> UpdateObservacao(Guid id, [FromBody] LogisticsViewModel logistics)
+        {
+            try
+            {
+                logistics.Id = id;
+
+                var user = await userService.GetByName(User.Identity.Name);
+
+                var result = await service.UpdateObservacao(logistics, user.Id);
+
+                if (result != ValidationResult.Success)
+                    return BadRequest(result);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPut("atualizar-data-logistica/{id}")]
+        public async Task<IActionResult> UpdateDataLog(Guid id, [FromBody] LogisticsViewModel logistics)
+        {
+            try
+            {
+                logistics.Id = id;
+
+                var user = await userService.GetByName(User.Identity.Name);
+
+                var result = await service.UpdateDataLog(logistics, user.Id);
+
+                if (result != ValidationResult.Success)
+                    return BadRequest(result);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {

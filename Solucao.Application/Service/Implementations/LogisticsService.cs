@@ -76,6 +76,7 @@ namespace Solucao.Application.Service.Implementations
         {
             logistics.Id = Guid.NewGuid();
             logistics.CreatedAt = DateTime.Now;
+            logistics.DataHoraLogistica = logistics.DataHora;
             logistics.Active = true;
 
             var entity = mapper.Map<Logistics>(logistics);
@@ -191,11 +192,13 @@ namespace Solucao.Application.Service.Implementations
                   CalendarId = calendar.Id,
                   DriverId = calendar.DriverId,
                   DataHora = calendar.StartTime.Value,
+                  DataHoraLogistica = calendar.StartTime.Value,
                   Tipo = TipoEventoLogistico.Entrega,
                   Titulo = "Entrega",
                   Endereco = calendar.Client.Address,
                   Active = true,
-                  CreatedAt = DateTime.Now
+                  CreatedAt = DateTime.Now,
+                  ObservacaoGoogle = calendar.GoogleNote
               });
           }
 
@@ -208,11 +211,13 @@ namespace Solucao.Application.Service.Implementations
                   CalendarId = calendar.Id,
                   DriverId = calendar.DriverCollectsId,
                   DataHora = calendar.EndTime.Value,
+                  DataHoraLogistica = calendar.EndTime.Value,
                   Tipo = TipoEventoLogistico.Recolha,
                   Titulo = "Recolha",
                   Endereco = calendar.Client.Address,
                   Active = true,
-                  CreatedAt = DateTime.Now
+                  CreatedAt = DateTime.Now,
+                  ObservacaoGoogle = calendar.GoogleNote
               });
           }
         }
@@ -221,5 +226,60 @@ namespace Solucao.Application.Service.Implementations
         {
             await repository.RemoveByCalendar(calendarId);
         }
-    }
+
+        public async Task<ValidationResult> UpdateDriver(LogisticsViewModel logistics, Guid loggedUserId)
+        {
+            var result = await repository.GetById(logistics.Id.Value);
+
+            if (result == null)
+                return new ValidationResult("Evento não encontrado.");
+
+            result.DriverId = logistics.DriverId;
+
+            await repository.Update(result);
+           
+            if (logistics.Tipo == 3)
+                return ValidationResult.Success;
+          
+            var calendar = await calendarRepository.GetById(logistics.CalendarId.Value);
+
+            if (logistics.Tipo == 1)
+                calendar.DriverId = logistics.DriverId;
+            else
+                calendar.DriverCollectsId = logistics.DriverId;
+
+            await calendarRepository.Update(calendar);
+
+            return ValidationResult.Success;
+            
+        }
+
+        public async Task<ValidationResult> UpdateObservacao(LogisticsViewModel logistics, Guid loggedUserId)
+        {
+            var result = await repository.GetById(logistics.Id.Value);
+
+            if (result == null)
+                return new ValidationResult("Evento não encontrado.");
+
+            result.Observacao = logistics.Observacao;
+
+            await repository.Update(result);
+          
+            return ValidationResult.Success;
+        }
+
+        public async Task<ValidationResult> UpdateDataLog(LogisticsViewModel logistics, Guid loggedUserId)
+        {
+          var result = await repository.GetById(logistics.Id.Value);
+
+            if (result == null)
+                return new ValidationResult("Evento não encontrado.");
+
+            result.DataHoraLogistica = logistics.DataHoraLogistica;
+
+            await repository.Update(result);
+          
+            return ValidationResult.Success;
+        }
+  }
 }
