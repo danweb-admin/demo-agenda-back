@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 
 namespace Solucao.API.Controllers
 {
-    [Route("api/v1")]
+    [Route("api/v1")] 
     [ApiController]
     [Authorize]
     public class CalendarsController : ControllerBase
