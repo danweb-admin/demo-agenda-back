@@ -37,7 +37,7 @@ namespace Solucao.API.Controllers
           Console.WriteLine(json);
 
           //await googleService.ExtrairInformacoe(model);
-
+           
           return Ok();
       }
       catch (IntegrationException ie)
