@@ -64,7 +64,14 @@ namespace Solucao.Application.Service.Implementations
 
         titulo = titulo.Trim();
 
-        var cliente = await clientRepository.GetByIntegrationName(titulo);
+        Client cliente = await clientRepository.GetByIntegrationName(titulo);
+
+        if (cliente == null)
+        {
+            var split = titulo.Split("-");
+
+            cliente = await clientRepository.GetByIntegrationName(split[0]);
+        }
 
         if (cliente == null)
           throw new IntegrationException($"Locatário: {request.Titulo.Trim()}, Locatário não encontrado.");

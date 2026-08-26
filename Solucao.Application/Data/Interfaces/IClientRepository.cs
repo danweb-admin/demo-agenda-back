@@ -15,6 +15,8 @@ namespace Solucao.Application.Data.Interfaces
         Task<Client> GetById(Guid Id);
         Task<Client> GetByName(string name);
         Task<Client> GetByIntegrationName(string name);
+        Task<Client> GetByIntegrationName2(string name);
+
         Task<ValidationResult> Add(Client client);
         Task<ValidationResult> Update(ClientViewModel client);
         Task<ValidationResult> AddClientEquipmentAndTimeValues(Client client);
