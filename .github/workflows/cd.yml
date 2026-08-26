@@ -30,30 +30,5 @@ jobs:
         repository: williambr2022/demo-agenda-back
         tags: ${{ github.sha }}, latest
   
-  deploy:
-    name: Deploy
-    runs-on: ubuntu-latest
-    needs: build   
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
-      
-      - name: kustomize
-        uses: imranismail/setup-kustomize@v2
-
-      - name: update k8s
-        run: |
-          cd Kubernetes
-          kustomize edit set image williambr2022/demo-agenda-back=williambr2022/demo-agenda-back:${{ github.sha }}
-          cat kustomization.yaml
-      - name: commit
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "Deploy Action"
-          git commit -am "change image tag"
-      - name: push
-        uses: ad-m/github-push-action@master
-        with:
-          force: true
-          github_token: ${{ secrets.TOKEN_GITHUB }}
-          branch: ${{ github.ref }}
+  
+          
