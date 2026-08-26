@@ -52,7 +52,19 @@ namespace Solucao.Application.Service.Implementations
         if (aparelho == null )
           throw new IntegrationException($"Aparelho: {request.Aparelho.Trim()}, Aparelho não encontrado.");
 
-        var cliente = await clientRepository.GetByIntegrationName(request.Titulo);
+        var titulo = request.Titulo;
+
+        // Remove CANCELADO
+        titulo = Regex.Replace(
+            titulo,
+            @"\*+CANCELADO\*+",
+            "",
+            RegexOptions.IgnoreCase
+        );
+
+        titulo = titulo.Trim();
+
+        var cliente = await clientRepository.GetByIntegrationName(titulo);
 
         if (cliente == null)
           throw new IntegrationException($"Locatário: {request.Titulo.Trim()}, Locatário não encontrado.");
