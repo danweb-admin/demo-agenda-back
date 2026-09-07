@@ -81,7 +81,7 @@ namespace Solucao.API.Controllers
                 equipamentIds = model.EquipamentList.Split(',').Select(Guid.Parse).ToList();
 
 
-            return await calendarService.Schedules(model.StartDate, model.EndDate, model.ClientId, equipamentIds, list, model.TechniqueId, model.Status);
+            return await calendarService.Schedules(model.StartDate, model.EndDate, model.ClientId, equipamentIds, list, model.TechniqueId, model.Status, model.StatusPagamento);
         }
 
         [HttpGet("calendar/availability")]

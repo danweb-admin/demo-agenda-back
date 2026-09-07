@@ -18,18 +18,19 @@ namespace Solucao.Application.Service.Implementations
   {
     private CalendarRepository calendarRepository;
     private ICalendarService calendarService;
-
+    private CityRepository cityRepository;
     private IClientRepository clientRepository;
     private IEquipamentRepository equipmentRepository;
     private UserRepository userRepository;
 
-    public GoogleService(CalendarRepository _calendarRepository, IClientRepository _clientRepository, IEquipamentRepository _equipmentRepository, UserRepository _userRepository, ICalendarService _calendarService)
+    public GoogleService(CalendarRepository _calendarRepository, IClientRepository _clientRepository, IEquipamentRepository _equipmentRepository, UserRepository _userRepository, ICalendarService _calendarService, CityRepository _cityRepository)
     {
       calendarRepository = _calendarRepository;
       clientRepository = _clientRepository;
       equipmentRepository = _equipmentRepository;
       userRepository = _userRepository;
       calendarService = _calendarService;
+      cityRepository = _cityRepository;
 
     }
 
@@ -46,73 +47,192 @@ namespace Solucao.Application.Service.Implementations
 
     private async Task<bool> InsereLocacao(GoogleRequest request)
     {
-        // Cliente e aparelho
+        // Aparelho
         var aparelho = await equipmentRepository.GetByName(request.Aparelho.Trim());
 
-        if (aparelho == null )
-          throw new IntegrationException($"Aparelho: {request.Aparelho.Trim()}, Aparelho não encontrado.");
-
-        var titulo = request.Titulo;
+        if (aparelho == null)
+            throw new IntegrationException(
+                $"Aparelho: {request.Aparelho.Trim()}, Aparelho não encontrado."
+            );
 
         // Remove CANCELADO
-        titulo = Regex.Replace(
-            titulo,
+        var titulo = Regex.Replace(
+            request.Titulo,
             @"\*+CANCELADO\*+",
             "",
             RegexOptions.IgnoreCase
+        ).Trim();
+
+        // ==========================================
+        // OBTÉM OU CRIA O CLIENTE
+        // ==========================================
+        var cliente = await ObterOuCriarCliente(
+            titulo,
+            request.Descricao
         );
 
-        titulo = titulo.Trim();
-
-        Client cliente = await clientRepository.GetByIntegrationName(titulo);
-
         if (cliente == null)
-        {
-            var split = titulo.Split("-");
-
-            cliente = await clientRepository.GetByIntegrationName(split[0].Trim());
-        }
-
-        if (cliente == null)
-          throw new IntegrationException($"Locatário: {request.Titulo.Trim()}, Locatário não encontrado.");
+            throw new IntegrationException(
+                $"Não foi possível identificar o locatário: {request.Titulo.Trim()}."
+            );
 
         var user = await userRepository.GetByEmail("admin@admin.com");
 
-        var horaInicio =  DateTime.Parse(request.Inicio);
+        var horaInicio = DateTime.Parse(request.Inicio);
         var horaFim = DateTime.Parse(request.Fim);
 
         CalendarViewModel locacao = new CalendarViewModel
         {
-          ClientId = cliente.Id,
-          EquipamentId = aparelho.Id,
-          Date = horaInicio,
-          StartTime = horaInicio,
-          EndTime = horaFim,
-          GoogleEventId = request.Id,
-          CreatedAt = DateTime.Now,
-          UserId = user.Id,
-          Active = true
+            ClientId = cliente.Id,
+            EquipamentId = aparelho.Id,
+            Date = horaInicio,
+            StartTime = horaInicio,
+            EndTime = horaFim,
+            GoogleEventId = request.Id,
+            CreatedAt = DateTime.Now,
+            UserId = user.Id,
+            Active = true
         };
 
         ExtrairIntegracaoDescricao(ref locacao, request.Descricao);
 
-      try
-      {
-        var result = await calendarService.Add(locacao,user.Id);
+        var result = await calendarService.Add(locacao, user.Id);
 
         if (result == null)
-          return true;
-      }
-      catch (Exception ex)
-      {
-        throw;
-      }
-
-        
+            return true;
 
         return false;
-      
- 
+    }
+
+    private async Task<Client> ObterOuCriarCliente(string titulo,string descricao)
+    {
+        // ==========================================
+        // 1. TENTA PELO TÍTULO COMPLETO
+        // ==========================================
+
+        var cliente = await clientRepository.GetByIntegrationName(titulo);
+
+        if (cliente != null)
+            return cliente;
+
+
+        // ==========================================
+        // 2. EXTRAI NOME E CIDADE DO TÍTULO
+        // ==========================================
+
+        var dadosTitulo = ExtrairDadosTitulo(titulo);
+
+        var nome = dadosTitulo.Nome;
+        var cidade = dadosTitulo.Cidade;
+
+
+        // ==========================================
+        // 3. TENTA PELO NOME
+        // ==========================================
+
+        if (!string.IsNullOrWhiteSpace(nome))
+        {
+            cliente = await clientRepository.GetByIntegrationName(nome);
+
+            if (cliente != null)
+                return cliente;
+        }
+
+
+        // ==========================================
+        // 4. EXTRAI DADOS DA DESCRIÇÃO
+        // ==========================================
+
+        var dadosDescricao = ExtrairDadosDescricao(descricao);
+
+
+        // ==========================================
+        // 5. SE O TÍTULO NÃO TIVER CIDADE,
+        //    USA A CIDADE DA DESCRIÇÃO
+        // ==========================================
+
+        if (string.IsNullOrWhiteSpace(cidade))
+            cidade = dadosDescricao.Cidade;
+
+        // ==========================================
+        // 4. LOCALIZA CIDADE
+        // ==========================================
+
+        var city = await cityRepository.GetCityByName(cidade.ToUpper());
+
+
+        // ==========================================
+        // 6. CRIA O CLIENTE
+        // ==========================================
+
+        cliente = new Client
+        {
+            Name = nome,
+            Phone = dadosDescricao.Telefone,
+            Address = dadosDescricao.Endereco,
+            Complement = dadosDescricao.Complemento,
+            Neighborhood = dadosDescricao.Bairro,
+            City = city,
+            State = city.State,
+            ZipCode = dadosDescricao.Cep
+        };
+
+
+        // ==========================================
+        // 7. SALVA
+        // ==========================================
+
+        clientRepository.Add(cliente);
+
+
+        return cliente;
+    }
+
+    private DadosTituloCliente ExtrairDadosTitulo(string titulo)
+    {
+        var resultado = new DadosTituloCliente();
+
+        if (string.IsNullOrWhiteSpace(titulo))
+            return resultado;
+
+        titulo = titulo.Trim();
+
+        // Exemplo:
+        // MPT-IVANA NOGUEIRA - PIRASSUNUNGA
+
+        var match = Regex.Match(
+            titulo,
+            @"^[^-]+-\s*(.*?)\s*-\s*(.+)$",
+            RegexOptions.IgnoreCase
+        );
+
+        if (match.Success)
+        {
+            resultado.Nome = match.Groups[1].Value.Trim();
+            resultado.Cidade = match.Groups[2].Value.Trim();
+
+            return resultado;
+        }
+
+        // Caso venha somente:
+        // MPT-IVANA NOGUEIRA
+
+        match = Regex.Match(
+            titulo,
+            @"^[^-]+-\s*(.+)$",
+            RegexOptions.IgnoreCase
+        );
+
+        if (match.Success)
+        {
+            resultado.Nome = match.Groups[1].Value.Trim();
+        }
+        else
+        {
+            resultado.Nome = titulo.Trim();
+        }
+
+        return resultado;
     }
 
     private void ExtrairIntegracaoDescricao(ref CalendarViewModel locacao, string descricao)
@@ -191,6 +311,247 @@ namespace Solucao.Application.Service.Implementations
         return "3";
     }
 
+    private DadosDescricaoCliente ExtrairDadosDescricao(string descricao)
+    {
+        var resultado = new DadosDescricaoCliente();
+
+        if (string.IsNullOrWhiteSpace(descricao))
+            return resultado;
+
+        // Normaliza espaços, mas mantém o texto original para alguns casos
+        var texto = Regex.Replace(descricao, @"\r\n|\r|\n", " ");
+        texto = Regex.Replace(texto, @"\s+", " ").Trim();
+
+
+        // ==========================================
+        // TELEFONE
+        // ==========================================
+
+        var telefoneMatch = Regex.Match(
+            texto,
+            @"(?:TEL\.?|TELEFONE)\s*[:\-]?\s*(\(?\d{2}\)?\s*\d{4,5}[-\s]?\d{4})",
+            RegexOptions.IgnoreCase
+        );
+
+        if (telefoneMatch.Success)
+        {
+            resultado.Telefone = NormalizarTelefone(
+                telefoneMatch.Groups[1].Value
+            );
+        }
+
+
+        // ==========================================
+        // CEP
+        // ==========================================
+
+        var cepMatch = Regex.Match(
+            texto,
+            @"CEP\s*[:\-]?\s*(\d{5}-?\d{3})",
+            RegexOptions.IgnoreCase
+        );
+
+        if (cepMatch.Success)
+        {
+            resultado.Cep = cepMatch.Groups[1].Value.Trim();
+        }
+
+
+        // ==========================================
+        // ENDEREÇO
+        // ==========================================
+
+        var enderecoMatch = Regex.Match(
+            texto,
+            @"(?:ATENÇÃO\s+A\s+NOVO\s+ENDEREÇO|NOVO\s+ENDEREÇO)\s*:\s*(.*?)(?:CEP\s*[:\-]?\s*\d{5}-?\d{3}|$)",
+            RegexOptions.IgnoreCase
+        );
+
+        if (enderecoMatch.Success)
+        {
+            var enderecoTexto = enderecoMatch.Groups[1].Value.Trim();
+
+            enderecoTexto = Regex.Replace(
+                enderecoTexto,
+                @"\s+",
+                " "
+            ).Trim();
+
+            resultado.Endereco = enderecoTexto;
+
+            ExtrairPartesEndereco(
+                enderecoTexto,
+                resultado
+            );
+        }
+
+        return resultado;
+    }
+
+    private string NormalizarTelefone(string telefone)
+    {
+        if (string.IsNullOrWhiteSpace(telefone))
+            return null;
+
+        return Regex.Replace(telefone, @"\D", "");
+    }
+
+    private void ExtrairPartesEndereco( string endereco, DadosDescricaoCliente resultado)
+    {
+        if (string.IsNullOrWhiteSpace(endereco))
+            return;
+
+        // ==========================================
+        // CIDADE E ESTADO
+        // ==========================================
+
+        var cidadeEstadoMatch = Regex.Match(
+            endereco,
+            @"(?:de\s+)?([^,]+),\s*(São Paulo|SP|Paraná|PR|Rio de Janeiro|RJ|Minas Gerais|MG)$",
+            RegexOptions.IgnoreCase
+        );
+
+        if (cidadeEstadoMatch.Success)
+        {
+            resultado.Cidade =
+                cidadeEstadoMatch.Groups[1].Value.Trim();
+
+            resultado.Estado =
+                ConverterEstadoParaSigla(
+                    cidadeEstadoMatch.Groups[2].Value.Trim()
+                );
+
+            endereco = endereco
+                .Substring(0, cidadeEstadoMatch.Index)
+                .Trim();
+        }
+
+
+        // ==========================================
+        // NÚMERO
+        // ==========================================
+
+        var numeroMatch = Regex.Match(
+            endereco,
+            @",\s*(\d+)",
+            RegexOptions.IgnoreCase
+        );
+
+
+        // ==========================================
+        // COMPLEMENTO / BAIRRO
+        // ==========================================
+
+        var complementoMatch = Regex.Match(
+            endereco,
+            @"(?:,\s*)?((?:sala|apto|apartamento|casa|bloco|conjunto)\s*[^,]*?)\s+(centro|[^,]+)$",
+            RegexOptions.IgnoreCase
+        );
+
+        if (complementoMatch.Success)
+        {
+            resultado.Complemento =
+                complementoMatch.Groups[1].Value.Trim();
+
+            resultado.Bairro =
+                complementoMatch.Groups[2].Value.Trim();
+
+            endereco = endereco
+                .Substring(0, complementoMatch.Index)
+                .Trim();
+        }
+        else
+        {
+            // Tenta identificar "centro" no final
+            var bairroMatch = Regex.Match(
+                endereco,
+                @"\b(centro)\b$",
+                RegexOptions.IgnoreCase
+            );
+
+            if (bairroMatch.Success)
+            {
+                resultado.Bairro =
+                    bairroMatch.Value.Trim();
+
+                endereco = endereco
+                    .Substring(0, bairroMatch.Index)
+                    .Trim();
+            }
+        }
+
+
+        // ==========================================
+        // LIMPA ENDEREÇO
+        // ==========================================
+
+        resultado.Endereco = endereco.Trim();
+    }
+
+    private string ConverterEstadoParaSigla(string estado)
+    {
+        if (string.IsNullOrWhiteSpace(estado))
+            return null;
+
+        estado = estado.Trim().ToUpper();
+
+        return estado switch
+        {
+            "SÃO PAULO" => "SP",
+            "PARANÁ" => "PR",
+            "RIO DE JANEIRO" => "RJ",
+            "MINAS GERAIS" => "MG",
+            "SANTA CATARINA" => "SC",
+            "RIO GRANDE DO SUL" => "RS",
+            "BAHIA" => "BA",
+            "PERNAMBUCO" => "PE",
+            "CEARÁ" => "CE",
+            "GOIÁS" => "GO",
+            "ESPÍRITO SANTO" => "ES",
+            "MATO GROSSO" => "MT",
+            "MATO GROSSO DO SUL" => "MS",
+            "PARÁ" => "PA",
+            "AMAZONAS" => "AM",
+            "MARANHÃO" => "MA",
+            "PARAÍBA" => "PB",
+            "RIO GRANDE DO NORTE" => "RN",
+            "ALAGOAS" => "AL",
+            "SERGIPE" => "SE",
+            "PIAUÍ" => "PI",
+            "TOCANTINS" => "TO",
+            "RONDÔNIA" => "RO",
+            "ACRE" => "AC",
+            "AMAPÁ" => "AP",
+            "RORAIMA" => "RR",
+            "DISTRITO FEDERAL" => "DF",
+            _ => estado
+        };
+    }
   }
+  public class DadosDescricaoCliente
+  {
+      public string Telefone { get; set; }
+
+      public string Cep { get; set; }
+
+      public string Endereco { get; set; }
+
+      public string Complemento { get; set; }
+
+      public string Bairro { get; set; }
+
+      public string Cidade { get; set; }
+
+      public string Estado { get; set; }
+  }
+
+  public class DadosTituloCliente
+  {
+      public string Nome { get; set; }
+      public string Cidade { get; set; }
+  }
+  
 }
+
+
 

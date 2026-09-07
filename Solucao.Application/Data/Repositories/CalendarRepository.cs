@@ -340,10 +340,11 @@ namespace Solucao.Application.Data.Repositories
         }
 
 
-        public async Task<IEnumerable<Calendar>> Schedules(DateTime startDate, DateTime endDate,  Guid? clientId, List<Guid> equipamentId, List<Guid> driverId, Guid? techniqueId, string status)
+        public async Task<IEnumerable<Calendar>> Schedules(DateTime startDate, DateTime endDate,  Guid? clientId, List<Guid> equipamentId, List<Guid> driverId, Guid? techniqueId, string status, string statusPagamento)
         {
             try
             {
+                
                 var sql = await Db.Calendars.Include(x => x.Equipament)
                                   .Include(x => x.Client)
                                   .Include(x => x.Client.City)
@@ -373,6 +374,12 @@ namespace Solucao.Application.Data.Repositories
                 {
                     var _status = status.Split(",");
                     sql = sql.Where(x => _status.Contains(x.Status)).ToList();
+                }
+
+                if (!string.IsNullOrEmpty(statusPagamento))
+                {
+                    var _statusPagamento = statusPagamento.Split(",");
+                    sql = sql.Where(x => _statusPagamento.Contains(x.PaymentStatus)).ToList();
                 }
                     
 
