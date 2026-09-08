@@ -91,7 +91,7 @@ namespace Solucao.Application.Service.Implementations
             //await AddNotificacao(_calendar);
 
             
-            await logisticsService.SincronizarLocacao(_calendar.Id);
+            //await logisticsService.SincronizarLocacao(_calendar.Id);
 
             return result;
         }
@@ -132,7 +132,7 @@ namespace Solucao.Application.Service.Implementations
 
             await notificacaoService.Remover(locacaoId);
 
-            await logisticsService.RemoverLocacao(locacaoId);
+            //await logisticsService.RemoverLocacao(locacaoId);
 
             if (result == null)
             {
@@ -169,7 +169,7 @@ namespace Solucao.Application.Service.Implementations
 
                 //await AddNotificacao(_calendarAdd);
 
-                await logisticsService.SincronizarLocacao(_calendarAdd.Id);
+                //await logisticsService.SincronizarLocacao(_calendarAdd.Id);
 
             }
 
