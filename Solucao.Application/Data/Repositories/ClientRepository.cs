@@ -238,9 +238,13 @@ namespace Solucao.Application.Data.Repositories
                 FirstOrDefaultAsync(x => x.Specialty.Contains(name) &&  x.Active);
         }
 
-    public Task<Client> GetByIntegrationName2(string name)
-    {
-      throw new NotImplementedException();
-    }
+        public async Task<IEnumerable<Client>> GetByIntegrationNameList(string name)
+        {
+          return await Db.Clients
+                    .Include(x => x.City)
+                    .Include(x => x.State)
+                    .Where(x => x.Specialty.Contains(name) &&  x.Active)
+                    .ToListAsync();
+        }
   }
 }

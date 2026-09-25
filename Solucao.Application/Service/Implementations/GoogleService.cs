@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Solucao.Application.Contracts;
@@ -53,6 +54,11 @@ namespace Solucao.Application.Service.Implementations
         if (aparelho == null)
             throw new IntegrationException(
                 $"Aparelho: {request.Aparelho.Trim()}, Aparelho não encontrado."
+            );
+
+        if (request.Titulo.Contains("CANCELADO"))
+          throw new IntegrationException(
+                $"Locacao: {request.Titulo}, Locacao cancelada."
             );
 
         // Remove CANCELADO
@@ -132,10 +138,15 @@ namespace Solucao.Application.Service.Implementations
 
         if (!string.IsNullOrWhiteSpace(nome))
         {
-            cliente = await clientRepository.GetByIntegrationName(nome);
+            var list = await clientRepository.GetByIntegrationNameList(nome);
 
-            if (cliente != null)
-                return cliente;
+            if (list.Count() == 1)
+              return list.FirstOrDefault();
+
+            var cliente1 = list.FirstOrDefault(x => x.Specialty.ToUpper().Contains(cidade.ToUpper()));
+
+            if (cliente1 != null)
+                return cliente1;
         }
 
 
@@ -196,6 +207,16 @@ namespace Solucao.Application.Service.Implementations
             return resultado;
 
         titulo = titulo.Trim();
+
+        var separados = titulo.Split('-');
+
+        if (separados.Length == 2)
+        {
+          resultado.Nome = separados[0];
+          resultado.Cidade = separados[1];
+
+          return resultado;
+        }
 
         // Exemplo:
         // MPT-IVANA NOGUEIRA - PIRASSUNUNGA
