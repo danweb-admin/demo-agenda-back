@@ -263,8 +263,8 @@ namespace Solucao.Application.Service.Implementations
         @"#INTEGRACAO\s*(.*?)\s*#FIMINTEGRACAO",
         RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
-        if (!match.Success)
-          throw new IntegrationException($"Integracao não encontrada.");
+        //if (!match.Success)
+        //  throw new IntegrationException($"Integracao não encontrada.");
             
 
         string bloco = match.Groups[1].Value;
@@ -294,7 +294,7 @@ namespace Solucao.Application.Service.Implementations
         var frete = ObterDecimal(dados, "FRETE");
         var desconto = ObterDecimal(dados, "DESCONTO");
 
-        locacao.Status = StatusToString(status);
+        locacao.Status = "1"; //StatusToString(status);
         locacao.Freight = frete;
         locacao.Discount = desconto;
         locacao.Value = valorLocacao;
