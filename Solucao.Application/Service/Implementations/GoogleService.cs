@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using AutoMapper;
 using Solucao.Application.Contracts;
 using Solucao.Application.Contracts.Requests;
 using Solucao.Application.Data.Entities;
@@ -23,8 +24,10 @@ namespace Solucao.Application.Service.Implementations
     private IClientRepository clientRepository;
     private IEquipamentRepository equipmentRepository;
     private UserRepository userRepository;
+    private readonly IMapper mapper;
 
-    public GoogleService(CalendarRepository _calendarRepository, IClientRepository _clientRepository, IEquipamentRepository _equipmentRepository, UserRepository _userRepository, ICalendarService _calendarService, CityRepository _cityRepository)
+
+    public GoogleService(CalendarRepository _calendarRepository, IClientRepository _clientRepository, IEquipamentRepository _equipmentRepository, UserRepository _userRepository, ICalendarService _calendarService, CityRepository _cityRepository, IMapper _mapper)
     {
       calendarRepository = _calendarRepository;
       clientRepository = _clientRepository;
@@ -32,6 +35,8 @@ namespace Solucao.Application.Service.Implementations
       userRepository = _userRepository;
       calendarService = _calendarService;
       cityRepository = _cityRepository;
+      mapper = _mapper;
+
 
     }
 
@@ -42,7 +47,17 @@ namespace Solucao.Application.Service.Implementations
         var locacao  = await calendarRepository.GetByGoogleEventId(request.Id);
 
         if (locacao == null)
+        {
           await InsereLocacao(request);
+          
+        }
+        else
+        {
+          
+          var modelView = mapper.Map<CalendarViewModel>(locacao);
+          await AtualizaLocacao(request,modelView);
+        }
+          
       
     }
 
@@ -109,6 +124,64 @@ namespace Solucao.Application.Service.Implementations
 
         return false;
     }
+
+    
+    private async Task<bool> AtualizaLocacao(GoogleRequest request, CalendarViewModel locacao)
+    {
+        // Verifica cancelamento
+        bool cancelado = request.Titulo.Contains(
+            "CANCELADO",
+            StringComparison.OrdinalIgnoreCase
+        );
+
+        var user = await userRepository.GetByEmail("admin@admin.com");
+
+
+        if (cancelado)
+        {
+            // Altere para o status de cancelamento
+            // utilizado no seu sistema.
+            //locacao.Active = false;
+            locacao.Status = "3";
+
+            // Se houver um campo específico para status,
+            // defina-o como Cancelada aqui.
+
+            await calendarService.Update(locacao,user.Id);
+
+            return true;
+        }
+
+        
+
+        // Converte os horários recebidos
+        var horaInicio = DateTime.Parse(request.Inicio);
+        var horaFim = DateTime.Parse(request.Fim);
+
+        // Atualiza os dados da locação
+        locacao.ClientId = locacao.ClientId;
+        locacao.EquipamentId = locacao.EquipamentId;
+
+        locacao.Date = horaInicio;
+        locacao.StartTime = horaInicio;
+        locacao.EndTime = horaFim;
+
+        locacao.Active = true;
+
+        // Atualiza as informações extraídas da descrição,
+        // incluindo os dados usados no Google Note,
+        // conforme a implementação de sua função.
+        ExtrairIntegracaoDescricao(
+            ref locacao,
+            request.Descricao
+        );
+
+        // Persiste as alterações
+        await calendarService.Update(locacao,user.Id);
+
+        return true;
+    }
+
 
     private async Task<Client> ObterOuCriarCliente(string titulo,string descricao)
     {
@@ -193,7 +266,7 @@ namespace Solucao.Application.Service.Implementations
         // 7. SALVA
         // ==========================================
 
-        clientRepository.Add(cliente);
+        await clientRepository.Add(cliente);
 
 
         return cliente;

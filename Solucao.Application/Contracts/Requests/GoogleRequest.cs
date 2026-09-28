@@ -10,6 +10,7 @@ namespace Solucao.Application.Contracts.Requests
     public string Local { get; set; }
     public string Descricao { get; set; }
     public string Aparelho { get; set; }
+    public string UltimaModificacao { get; set; }
 
   }
 }
