@@ -94,7 +94,7 @@ namespace Solucao.Application.Service.Implementations
             //await AddNotificacao(_calendar);
 
             
-            //await logisticsService.SincronizarLocacao(_calendar.Id);
+            await logisticsService.SincronizarLocacao(_calendar.Id);
 
             return result;
         }
