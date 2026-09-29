@@ -101,6 +101,7 @@ namespace Solucao.Application.Service.Implementations
 
         var horaInicio = DateTime.Parse(request.Inicio);
         var horaFim = DateTime.Parse(request.Fim);
+        var ultimaModificacao = DateTime.Parse(request.UltimaModificacao);
 
         CalendarViewModel locacao = new CalendarViewModel
         {
@@ -112,7 +113,8 @@ namespace Solucao.Application.Service.Implementations
             GoogleEventId = request.Id,
             CreatedAt = DateTime.Now,
             UserId = user.Id,
-            Active = true
+            Active = true,
+            UltSincronizacaoGoogle = ultimaModificacao
         };
 
         ExtrairIntegracaoDescricao(ref locacao, request.Descricao);
@@ -157,6 +159,16 @@ namespace Solucao.Application.Service.Implementations
         // Converte os horários recebidos
         var horaInicio = DateTime.Parse(request.Inicio);
         var horaFim = DateTime.Parse(request.Fim);
+        var ultimaModificacao = DateTime.Parse(request.UltimaModificacao);
+
+        if (ultimaModificacao <= locacao.UltSincronizacaoGoogle)
+        {
+          Console.WriteLine($"Locacao: {request.Titulo}, Locacao não houve alteracao.");
+          throw new IntegrationException(
+                  $"Locacao: {request.Titulo}, Locacao não houve alteracao."
+              );
+        }
+          
 
         // Atualiza os dados da locação
         locacao.ClientId = locacao.ClientId;
