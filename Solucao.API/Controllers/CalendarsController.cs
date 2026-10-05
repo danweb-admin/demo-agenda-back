@@ -250,6 +250,19 @@ namespace Solucao.API.Controllers
             return Ok(result);
         }
 
+        [HttpPut("calendar/update-equipment")]
+        public async Task<IActionResult> UpdateEquipmentAsync([FromBody] CalendarRequest model)
+        {
+            ValidationResult result;
+
+            result = await calendarService.UpdateEquipment(model.CalendarId.Value, model.EquipamentId.Value);
+
+            if (result != null)
+                return NotFound(result);
+
+            return Ok(result);
+        }
+
         [HttpPost("calendar/bulk-scheduling")]
         public async Task<IActionResult> BulkSchedulingAsync([FromBody] BulkSchedulingRequest model)
         {

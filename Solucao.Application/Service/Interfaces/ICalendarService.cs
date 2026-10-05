@@ -22,6 +22,7 @@ namespace Solucao.Application.Service.Interfaces
         Task<ValidationResult> UpdateDriverOrTechniqueCalendar(Guid id, Guid personId, bool isDriver, bool isCollect);
         Task<ValidationResult> UpdateStatusOrTravelOnCalendar(Guid id, string status, string travelOn, bool isTravelOn);
         Task<ValidationResult> UpdateContractMade(Guid id);
+        Task<ValidationResult> UpdateEquipment(Guid id, Guid equipmentId);
         Task<ValidationResult> ValidateLease(DateTime date, Guid clientId, Guid equipamentId, IList<CalendarSpecifications> specifications ,string startTime, string endTime);
         Task<IEnumerable<CalendarViewModel>> Schedules(DateTime startDate, DateTime endDate, Guid? clientId, List<Guid> equipamentIds, List<Guid> driverId, Guid? techniqueId, string status, string statusPagamento);
         Task<string> Availability(List<Guid> equipamentIds, int month, int year);

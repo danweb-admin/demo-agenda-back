@@ -163,63 +163,89 @@ namespace Solucao.Application.Service.Implementations
             return ValidationResult.Success;
         }
 
+        
         public async Task SincronizarLocacao(Guid calendarId)
         {
-          var calendar = await calendarRepository.GetById(calendarId);
+            var calendar = await calendarRepository.GetById(calendarId);
 
-          if (calendar == null)
-              return;
+            if (calendar == null)
+                return;
 
-          // Remove eventos existentes
-          await repository.RemoveByCalendar(calendarId);
+            var motorista = await personRepository.GetByName("M", "X");
+            var motoristaPadrao = motorista.FirstOrDefault();
 
-          var motorista = await personRepository.GetByName("M","X");
+            if (calendar.DriverId == null && motoristaPadrao != null)
+                calendar.DriverId = motoristaPadrao.Id;
 
-          if (calendar.DriverId == null)
-            calendar.DriverId = motorista.First().Id;
+            if (calendar.DriverCollectsId == null && motoristaPadrao != null)
+                calendar.DriverCollectsId = motoristaPadrao.Id;
 
-          if (calendar.DriverCollectsId == null)
-            calendar.DriverCollectsId = motorista.First().Id;
-          
-            
+            // Busca as logísticas existentes
+            var logisticas = await repository.GetByCalendarId(calendarId);
 
-          // Entrega
-          if (calendar.DriverId != null)
-          {
-              await repository.Add(new Logistics
-              {
-                  Id = Guid.NewGuid(),
-                  CalendarId = calendar.Id,
-                  DriverId = calendar.DriverId,
-                  DataHora = calendar.StartTime.Value,
-                  DataHoraLogistica = calendar.StartTime.Value,
-                  Tipo = TipoEventoLogistico.Entrega,
-                  Titulo = "Entrega",
-                  Endereco = calendar.Client.Address,
-                  Active = true,
-                  CreatedAt = DateTime.Now,
-                  ObservacaoGoogle = calendar.GoogleNote
-              });
-          }
+            // Entrega
+            if (calendar.StartTime.HasValue && calendar.DriverId.HasValue)
+            {
+                var entrega = logisticas.FirstOrDefault(
+                    x => x.Tipo == TipoEventoLogistico.Entrega);
 
-          // Recolha
-          if (calendar.DriverCollectsId != null)
-          {
-              await repository.Add(new Logistics
-              {
-                  Id = Guid.NewGuid(),
-                  CalendarId = calendar.Id,
-                  DriverId = calendar.DriverCollectsId,
-                  DataHora = calendar.EndTime.Value,
-                  DataHoraLogistica = calendar.EndTime.Value,
-                  Tipo = TipoEventoLogistico.Recolha,
-                  Titulo = "Recolha",
-                  Endereco = calendar.Client.Address,
-                  Active = true,
-                  CreatedAt = DateTime.Now,
-                  ObservacaoGoogle = calendar.GoogleNote
-              });
-          }
+                if (entrega == null)
+                {
+                    entrega = new Logistics
+                    {
+                        Id = Guid.NewGuid(),
+                        CalendarId = calendar.Id,
+                        Tipo = TipoEventoLogistico.Entrega,
+                        CreatedAt = DateTime.Now,
+                        Active = true
+                    };
+                }
+
+                entrega.DriverId = calendar.DriverId.Value;
+                entrega.DataHora = calendar.StartTime.Value;
+                entrega.DataHoraLogistica = calendar.StartTime.Value;
+                entrega.Titulo = "Entrega";
+                entrega.Endereco = calendar.Client.Address;
+                entrega.ObservacaoGoogle = calendar.GoogleNote;
+                entrega.Active = true;
+
+                if (!logisticas.Any(x => x.Id == entrega.Id))
+                    await repository.Add(entrega);
+                else
+                    await repository.Update(entrega);
+            }
+
+            // Recolha
+            if (calendar.EndTime.HasValue && calendar.DriverCollectsId.HasValue)
+            {
+                var recolha = logisticas.FirstOrDefault(
+                    x => x.Tipo == TipoEventoLogistico.Recolha);
+
+                if (recolha == null)
+                {
+                    recolha = new Logistics
+                    {
+                        Id = Guid.NewGuid(),
+                        CalendarId = calendar.Id,
+                        Tipo = TipoEventoLogistico.Recolha,
+                        CreatedAt = DateTime.Now,
+                        Active = true
+                    };
+                }
+
+                recolha.DriverId = calendar.DriverCollectsId.Value;
+                recolha.DataHora = calendar.EndTime.Value;
+                recolha.DataHoraLogistica = calendar.EndTime.Value;
+                recolha.Titulo = "Recolha";
+                recolha.Endereco = calendar.Client.Address;
+                recolha.ObservacaoGoogle = calendar.GoogleNote;
+                recolha.Active = true;
+
+                if (!logisticas.Any(x => x.Id == recolha.Id))
+                    await repository.Add(recolha);
+                else
+                    await repository.Update(recolha);
+            }
         }
 
         public async Task RemoverLocacao(Guid calendarId)

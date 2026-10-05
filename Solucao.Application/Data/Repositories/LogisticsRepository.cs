@@ -184,5 +184,14 @@ namespace Solucao.Application.Data.Repositories
 
             await Db.SaveChangesAsync();
         }
+
+        public async Task<IEnumerable<Logistics>> GetByCalendarId(Guid calendarId)
+        {
+            var eventos = await DbSet
+                .Where(x => x.CalendarId == calendarId && x.Active)
+                .ToListAsync();
+
+            return eventos;
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Solucao.Application.Contracts;
@@ -144,8 +145,6 @@ namespace Solucao.Application.Service.Implementations
                 calendar.CreatedAt = DateTime.Now;
                 calendar.UpdatedAt = null;
                 calendar.Active = true;
-                calendar.StartTime = null;
-                calendar.EndTime = null;
                 calendar.UserId = user;
 
                 if (calendar.ContractMade)
@@ -172,7 +171,7 @@ namespace Solucao.Application.Service.Implementations
 
                 //await AddNotificacao(_calendarAdd);
 
-                //await logisticsService.SincronizarLocacao(_calendarAdd.Id);
+                await logisticsService.SincronizarLocacao(_calendarAdd.Id);
 
             }
 
@@ -383,6 +382,27 @@ namespace Solucao.Application.Service.Implementations
                 calendar.ContractMade = !calendar.ContractMade;
 
                 await calendarRepository.Update(calendar);
+
+                return ValidationResult.Success;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<ValidationResult> UpdateEquipment(Guid id, Guid equipmentId)
+        {
+          try
+            {
+                var calendar = await calendarRepository.GetById(id);
+                
+                calendar.EquipamentId = equipmentId;
+
+                await calendarRepository.UpdateAgendamento(calendar);
+
+                await logisticsService.SincronizarLocacao(calendar.Id);
+
 
                 return ValidationResult.Success;
             }
@@ -705,5 +725,7 @@ Por favor, clique no link abaixo para realizar a confirmação da locação:
                 Console.WriteLine(ex);
               }
         }
-    }
+
+    
+  }
 }
