@@ -35,7 +35,7 @@ namespace Solucao.Application.Data.Repositories
         public virtual async Task<Equipament> GetByName(string name)
         {
             return await Db.Equipaments
-                .FirstOrDefaultAsync(x => x.Name == name);
+                .FirstOrDefaultAsync(x => x.Name.StartsWith(name));
         }
 
         public virtual async Task<IEnumerable<Equipament>> GetListById(List<Guid> guids)
