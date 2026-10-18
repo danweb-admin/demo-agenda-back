@@ -125,7 +125,7 @@ namespace Solucao.Application.Data.Repositories
         public async Task<Calendar> GetByGoogleEventId(string uid)
         {
 
-            return await Db.Calendars
+            return await Db.Calendars.OrderByDescending(x => x.CreatedAt)
                         .FirstOrDefaultAsync(x => x.GoogleEventId == uid);
         }
 

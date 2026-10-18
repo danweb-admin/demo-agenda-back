@@ -177,7 +177,7 @@ namespace Solucao.Application.Service.Implementations
         locacao.Date = horaInicio;
         locacao.StartTime = horaInicio;
         locacao.EndTime = horaFim;
-
+        locacao.UltSincronizacaoGoogle = ultimaModificacao;
         locacao.Active = true;
 
         // Atualiza as informações extraídas da descrição,
