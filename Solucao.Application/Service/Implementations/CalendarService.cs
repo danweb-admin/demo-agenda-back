@@ -171,7 +171,7 @@ namespace Solucao.Application.Service.Implementations
 
                 //await AddNotificacao(_calendarAdd);
 
-                await logisticsService.SincronizarLocacao(_calendarAdd.Id);
+                await logisticsService.SincronizarLocacao(parentId);
 
             }
 
