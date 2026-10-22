@@ -33,6 +33,9 @@ public class LogisticsViewModel
 
     public DateTime? UpdatedAt { get; set; }
 
+    public string Acessorios { get; set; }
+
+
     // Dados da locação
     public string Cliente { get; set; }
 
