@@ -143,6 +143,7 @@ namespace Solucao.API.Controllers
             }
         }
 
+
         [HttpPut("atualizar-data-logistica/{id}")]
         public async Task<IActionResult> UpdateDataLog(Guid id, [FromBody] LogisticsViewModel logistics)
         {
@@ -153,6 +154,28 @@ namespace Solucao.API.Controllers
                 var user = await userService.GetByName(User.Identity.Name);
 
                 var result = await service.UpdateDataLog(logistics, user.Id);
+
+                if (result != ValidationResult.Success)
+                    return BadRequest(result);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPut("atualizar-acessorio/{id}")]
+        public async Task<IActionResult> UpdateAcessorio(Guid id, [FromBody] LogisticsViewModel logistics)
+        {
+            try
+            {
+                logistics.Id = id;
+
+                var user = await userService.GetByName(User.Identity.Name);
+
+                var result = await service.UpdateAcessorio(logistics, user.Id);
 
                 if (result != ValidationResult.Success)
                     return BadRequest(result);

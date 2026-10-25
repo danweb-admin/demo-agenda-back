@@ -26,6 +26,7 @@ namespace Solucao.Application.Service.Interfaces
 
         Task<ValidationResult> UpdateDataLog(LogisticsViewModel logistics, Guid loggedUserId);
 
+        Task<ValidationResult> UpdateAcessorio(LogisticsViewModel logistics, Guid loggedUserId);
 
         Task<ValidationResult> Remove(Guid id, Guid loggedUserId);
 

@@ -307,5 +307,19 @@ namespace Solucao.Application.Service.Implementations
           
             return ValidationResult.Success;
         }
+
+        public async Task<ValidationResult> UpdateAcessorio(LogisticsViewModel logistics, Guid loggedUserId)
+        {
+          var result = await repository.GetById(logistics.Id.Value);
+
+            if (result == null)
+                return new ValidationResult("Evento não encontrado.");
+
+            result.Acessorios = logistics.Acessorios;
+
+            await repository.Update(result);
+          
+            return ValidationResult.Success;
+        }
   }
 }
