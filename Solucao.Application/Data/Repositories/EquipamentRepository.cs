@@ -29,7 +29,7 @@ namespace Solucao.Application.Data.Repositories
                 .Include(x => x.EquipamentSpecifications)
                 .Include(x => x.EquipamentConsumables)
                 .ThenInclude(x => x.Consumable)
-                .Where(x => x.Active == ativo).OrderBy(x => x.Order).ToListAsync();
+                .Where(x => x.Active == ativo).OrderBy(x => x.Order).OrderBy(x => x.Name).ToListAsync();
         }
 
         public virtual async Task<Equipament> GetByName(string name)
