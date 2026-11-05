@@ -45,8 +45,13 @@ namespace Solucao.Application.Data.Repositories
 
         public async Task<City> GetCityByName(string name)
         {
-           return await Db.Cities.Include(x => x.State)
-                .FirstOrDefaultAsync(x => x.Nome == name);
+           return await Db.Cities
+            .FromSqlRaw(
+                "SELECT * FROM Cities WHERE Nome COLLATE Latin1_General_CI_AI = {0}",
+                name
+            )
+            .Include(x => x.State)
+            .FirstOrDefaultAsync();
         }
         
     }

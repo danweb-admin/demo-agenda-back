@@ -84,6 +84,14 @@ namespace Solucao.Application.Service.Implementations
             RegexOptions.IgnoreCase
         ).Trim();
 
+        // Remove CADASTRO
+        titulo = Regex.Replace(
+            request.Titulo,
+            @"CADASTRO-",
+            "",
+            RegexOptions.IgnoreCase
+        ).Trim();
+
         // ==========================================
         // OBTÉM OU CRIA O CLIENTE
         // ==========================================
@@ -263,13 +271,15 @@ namespace Solucao.Application.Service.Implementations
 
         cliente = new Client
         {
+            CreatedAt = DateTime.Now,
             Name = nome,
             Phone = dadosDescricao.Telefone,
             Address = dadosDescricao.Endereco,
             Complement = dadosDescricao.Complemento,
+            Number = ".",
             Neighborhood = dadosDescricao.Bairro,
-            City = city,
-            State = city.State,
+            CityId = city.Id,
+            StateId = city.StateId,
             ZipCode = dadosDescricao.Cep
         };
 
