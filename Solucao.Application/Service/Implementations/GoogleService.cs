@@ -278,7 +278,9 @@ namespace Solucao.Application.Service.Implementations
             Complement = dadosDescricao.Complemento,
             Number = ".",
             Neighborhood = dadosDescricao.Bairro,
+            City = city,
             CityId = city.Id,
+            State = city.State,
             StateId = city.StateId,
             ZipCode = dadosDescricao.Cep
         };
