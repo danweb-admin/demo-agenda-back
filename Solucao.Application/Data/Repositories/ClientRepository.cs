@@ -84,6 +84,15 @@ namespace Solucao.Application.Data.Repositories
         {
             try
             {
+                if (client.State != null)
+                {
+                    Db.Entry(client.State).State = EntityState.Unchanged;
+                }
+
+                if (client.City != null)
+                {
+                    Db.Entry(client.City).State = EntityState.Unchanged;
+                }
 
                 Db.Clients.Add(client);
                 await Db.SaveChangesAsync();
