@@ -17,6 +17,8 @@ namespace Solucao.Application.Data.Entities
     public string ObservacaoGoogle { get; set; }
     public bool Concluido { get; set; }
     public string Acessorios { get; set; }
+    public string Placa { get; set; }
+
     public Calendar Calendar { get; set; }
     public Person Driver { get; set; }
   }

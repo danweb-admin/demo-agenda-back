@@ -119,6 +119,8 @@ namespace Solucao.Application.Data.Repositories
                         .ThenInclude(x => x.ClientDigitalSignatures)
                         .Include(x => x.Client.City)
                         .Include(x => x.Client.State)
+                        .Include(x => x.Driver)
+                        .Include(x => x.DriverCollects)
                         .FirstOrDefaultAsync(x => x.Id == id);
         }
 

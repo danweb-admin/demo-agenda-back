@@ -208,6 +208,7 @@ namespace Solucao.Application.Service.Implementations
                 entrega.Endereco = calendar.Client.Address;
                 entrega.ObservacaoGoogle = calendar.GoogleNote;
                 entrega.Active = true;
+                entrega.Placa = calendar.Driver.Plate;
 
                 if (!logisticas.Any(x => x.Id == entrega.Id))
                     await repository.Add(entrega);
@@ -240,6 +241,8 @@ namespace Solucao.Application.Service.Implementations
                 recolha.Endereco = calendar.Client.Address;
                 recolha.ObservacaoGoogle = calendar.GoogleNote;
                 recolha.Active = true;
+                recolha.Placa = calendar.DriverCollects.Plate;
+
 
                 if (!logisticas.Any(x => x.Id == recolha.Id))
                     await repository.Add(recolha);
