@@ -242,6 +242,8 @@ namespace Solucao.Application.Service.Implementations
                 return cliente1;
         }
 
+        return null;
+
 
         // ==========================================
         // 4. EXTRAI DADOS DA DESCRIÇÃO

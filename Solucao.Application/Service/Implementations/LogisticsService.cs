@@ -209,10 +209,7 @@ namespace Solucao.Application.Service.Implementations
                 entrega.ObservacaoGoogle = calendar.GoogleNote;
                 entrega.Active = true;
 
-                if (calendar.Driver == null)
-                  entrega.Placa = motoristaPadrao.Plate;
-                else
-                  entrega.Placa = calendar.Driver.Plate;
+                
 
                 if (!logisticas.Any(x => x.Id == entrega.Id))
                     await repository.Add(entrega);
@@ -246,10 +243,7 @@ namespace Solucao.Application.Service.Implementations
                 recolha.ObservacaoGoogle = calendar.GoogleNote;
                 recolha.Active = true;
 
-                if (calendar.DriverCollects == null)
-                  recolha.Placa = motoristaPadrao.Plate;
-                else
-                  recolha.Placa = calendar.DriverCollects.Plate;
+               
 
 
                 if (!logisticas.Any(x => x.Id == recolha.Id))
