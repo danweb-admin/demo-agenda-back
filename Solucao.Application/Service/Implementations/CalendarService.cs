@@ -165,6 +165,9 @@ namespace Solucao.Application.Service.Implementations
                 if (string.IsNullOrEmpty(calendar.Status))
                     calendar.Status = "2";
 
+                if (string.IsNullOrEmpty(calendar.PaymentStatus))
+                  calendar.PaymentStatus = "pending";
+
                 var _calendarAdd = mapper.Map<Calendar>(calendar);
 
                 await calendarRepository.Add(_calendarAdd);
