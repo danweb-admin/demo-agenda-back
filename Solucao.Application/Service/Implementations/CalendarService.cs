@@ -134,6 +134,12 @@ namespace Solucao.Application.Service.Implementations
                 result = await calendarRepository.Update(_calendar);
             }
 
+            // Se locacao for cancelada ou excluida, remove a logistica
+            if (calendar.Status == "3" || calendar.Status == "4")
+            {
+                await logisticsService.RemoverLocacao(calendar.Id.Value);
+            }
+
             await notificacaoService.Remover(locacaoId);
 
             //await logisticsService.RemoverLocacao(locacaoId);

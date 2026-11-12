@@ -23,6 +23,8 @@ namespace Solucao.Application.Service.Implementations
     private CityRepository cityRepository;
     private IClientRepository clientRepository;
     private IEquipamentRepository equipmentRepository;
+        private LogisticsRepository logisticsRepository;
+
     private UserRepository userRepository;
     private readonly IMapper mapper;
 
@@ -88,6 +90,14 @@ namespace Solucao.Application.Service.Implementations
         titulo = Regex.Replace(
             request.Titulo,
             @"CADASTRO-",
+            "",
+            RegexOptions.IgnoreCase
+        ).Trim();
+
+        // Remove MPT-
+        titulo = Regex.Replace(
+            request.Titulo,
+            @"MPT-",
             "",
             RegexOptions.IgnoreCase
         ).Trim();
@@ -221,7 +231,7 @@ namespace Solucao.Application.Service.Implementations
 
         var dadosTitulo = ExtrairDadosTitulo(titulo);
 
-        var nome = dadosTitulo.Nome;
+        var nome = dadosTitulo.Nome.Trim();
         var cidade = dadosTitulo.Cidade;
 
 
